@@ -1,3 +1,10 @@
 export default function Home() {
-  return <h1>Hello World</h1>
+  return (
+    <main>
+      <section>
+        <h1>Como você está se sentindo?</h1>
+        <p>Welcome to the home page</p>
+      </section>
+    </main>
+  )
 }
