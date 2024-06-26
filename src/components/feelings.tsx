@@ -3,70 +3,92 @@
 import Image from 'next/image'
 import { useState } from 'react'
 
+import { useSteps } from '@/context/StepContext'
 import { cn } from '@/lib/utils'
 
 import { Slider } from './ui/slider'
 
 const FEELINGS = [
   {
-    id: 1,
+    id: 'help',
     name: 'Socorro',
     image: '/images/feelings/00-help.svg',
   },
   {
-    id: 2,
+    id: 'sad',
     name: 'Triste',
     image: '/images/feelings/01-sad.svg',
   },
   {
-    id: 3,
+    id: 'worried',
     name: 'Sei lá',
     image: '/images/feelings/02-worried.svg',
   },
   {
-    id: 4,
+    id: 'neutral',
     name: 'Normal',
     image: '/images/feelings/03-neutral.svg',
   },
   {
-    id: 5,
+    id: 'happy',
     name: 'Feliz',
     image: '/images/feelings/04-happy.svg',
   },
   {
-    id: 6,
+    id: 'inlove',
     name: 'Apaixonado',
     image: '/images/feelings/05-in-love.svg',
   },
   {
-    id: 7,
+    id: 'wonderful',
     name: 'Extraordinário',
     image: '/images/feelings/06-wonderful.svg',
   },
 ]
 
 export function Feelings() {
+  const { handleFeeling } = useSteps()
+
   const [feelingInterval, setFeelingInterval] = useState([50])
 
   function getFeelings() {
     if (feelingInterval[0] <= 10) {
+      handleFeeling('help')
+
       return FEELINGS[0]
     }
+
     if (feelingInterval[0] <= 25) {
+      handleFeeling('sad')
+
       return FEELINGS[1]
     }
+
     if (feelingInterval[0] <= 40) {
+      handleFeeling('worried')
+
       return FEELINGS[2]
     }
+
     if (feelingInterval[0] <= 50) {
+      handleFeeling('neutral')
+
       return FEELINGS[3]
     }
+
     if (feelingInterval[0] <= 65) {
+      handleFeeling('happy')
+
       return FEELINGS[4]
     }
+
     if (feelingInterval[0] <= 80) {
+      handleFeeling('inlove')
+
       return FEELINGS[5]
     }
+
+    handleFeeling('wonderful')
 
     return FEELINGS[6]
   }

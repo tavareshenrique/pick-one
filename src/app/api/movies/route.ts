@@ -69,8 +69,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(moviesData, { status: 200 })
   } catch (error) {
-    console.log('error:', error)
-
     return NextResponse.json(
       { message: 'Internal Server Error' },
       { status: 500 },

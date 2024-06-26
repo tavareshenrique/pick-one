@@ -1,7 +1,7 @@
 import { Steps } from '@/components/steps'
 import { StepsProvider } from '@/context/StepContext'
 
-export default function Home() {
+export default async function Home() {
   return (
     <StepsProvider>
       <main className="flex flex-col items-center justify-center h-screen">

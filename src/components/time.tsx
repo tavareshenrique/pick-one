@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { useSteps } from '@/context/StepContext'
 import { cn } from '@/lib/utils'
 
 import { Slider } from './ui/slider'
@@ -21,25 +22,33 @@ const TIME = [
   },
   {
     id: 4,
-    name: 'Mais de 2h',
+    name: 'No Máximo 3h 00 minutos',
   },
 ]
 
 export function Time() {
+  const { handleMovieTime } = useSteps()
+
   const [timeInterval, setTimeInterval] = useState([33])
 
   function getTime() {
     if (timeInterval[0] <= 25) {
+      handleMovieTime(75)
+
       return TIME[0]
     }
 
     if (timeInterval[0] <= 50) {
+      handleMovieTime(90)
       return TIME[1]
     }
 
     if (timeInterval[0] <= 75) {
+      handleMovieTime(120)
       return TIME[2]
     }
+
+    handleMovieTime(180)
 
     return TIME[3]
   }

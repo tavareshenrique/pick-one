@@ -5,6 +5,8 @@ import { Inter } from 'next/font/google'
 
 import { ThemeProvider } from '@/components/theme-provider'
 
+import ReactQueryProvider from '../providers/ReactQueryProvider'
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -27,7 +29,7 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          {children}
+          <ReactQueryProvider>{children}</ReactQueryProvider>
         </ThemeProvider>
       </body>
     </html>

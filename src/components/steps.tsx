@@ -3,6 +3,7 @@
 import { useSteps } from '@/context/StepContext'
 
 import { Feelings } from './feelings'
+import { Movie } from './movie'
 import { Time } from './time'
 
 export function Steps() {
@@ -17,7 +18,8 @@ export function Steps() {
       return <Time />
     }
 
-    return <p>Filmes...</p>
+    console.log('currentStep:', currentStep)
+    return <Movie />
   }
 
   return (
