@@ -1,11 +1,14 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import Lottie from 'lottie-react'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 import { useSteps } from '@/context/StepContext'
 import { movies } from '@/modules/movies'
+
+import movieLoadingAnimation from '../assets/lottie/movie-loading.json'
 
 export interface IMovieData {
   id: number
@@ -44,7 +47,7 @@ export function Movie() {
           const movieFallback = data[randomIndex]
 
           const movieTime = await fetch(
-            `http://localhost:3000/api/movies/details/${movieFallback.id}`,
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/movies/details/${movieFallback.id}`,
           )
 
           const movieFallbackData = await movieTime.json()
@@ -64,7 +67,7 @@ export function Movie() {
         const movieFromList = dataMovie[randomIndex]
 
         const movieTime = await fetch(
-          `http://localhost:3000/api/movies/details/${movieFromList.id}`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/movies/details/${movieFromList.id}`,
         )
 
         const movieData = await movieTime.json()
@@ -92,9 +95,20 @@ export function Movie() {
   }, [data, movieTimeInMinutes])
 
   if (isLoading || isLoadingMovie || !selectedMovie)
-    return <div>Loading...</div>
+    return (
+      <Lottie
+        animationData={movieLoadingAnimation}
+        loop={true}
+        className="w-1/4"
+      />
+    )
 
-  if (isError) return <div>Error</div>
+  if (isError)
+    return (
+      <p className="text-center text-sm text-rose-500">
+        Não conseguimos carregar os filmes, tente novamente mais tarde
+      </p>
+    )
 
   return (
     // <div className="flex flex-col items-center justify-center space-x-4 w-full max-w-3xl gap-16 md:bg-red-500">

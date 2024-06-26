@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     const feeling = searchParams.get('feeling')
 
     const internalGenreResponse = await fetch(
-      `http://localhost:3000/api/movies/genre?feeling=${feeling}`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/movies/genre?feeling=${feeling}`,
     )
 
     const internalGenresData = (await internalGenreResponse.json()) as string[]
