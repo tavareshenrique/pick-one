@@ -1,12 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-type TGenre = {
+type TMovieResult = {
+  adult: boolean
+  backdrop_path: string
+  genre_ids: number[]
   id: number
-  name: string
+  original_language: string
+  original_title: string
+  overview: string
+  popularity: number
+  poster_path: string
+  release_date: string
+  title: string
+  video: boolean
+  vote_average: number
+  vote_count: number
 }
 
-export interface IGenreResponse {
-  genres: TGenre[]
+interface IMovie {
+  page: number
+  results: TMovieResult[]
+  total_pages: number
+  total_results: number
 }
 
 export async function GET(req: NextRequest) {
@@ -23,8 +38,7 @@ export async function GET(req: NextRequest) {
       `http://localhost:3000/api/movies/genre?feeling=${feeling}`,
     )
 
-    const internalGenresData =
-      (await internalGenreResponse.json()) as IGenreResponse
+    const internalGenresData = (await internalGenreResponse.json()) as string[]
 
     const genresIds = internalGenresData.map((genre) => genre).join(',')
 
@@ -40,13 +54,20 @@ export async function GET(req: NextRequest) {
 
     const moviesResponse = await fetch(url, options)
 
-    const movies = (await moviesResponse.json()) as IGenreResponse
+    const movies = (await moviesResponse.json()) as IMovie
 
-    return NextResponse.json(
-      movies,
+    const moviesData = movies.results.map((movie) => {
+      return {
+        id: movie.id,
+        title: movie.title,
+        originalTitle: movie.original_title,
+        overview: movie.overview,
+        poster_path: movie.poster_path,
+        vote_average: movie.vote_average,
+      }
+    })
 
-      { status: 200 },
-    )
+    return NextResponse.json(moviesData, { status: 200 })
   } catch (error) {
     console.log('error:', error)
 
