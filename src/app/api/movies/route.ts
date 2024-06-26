@@ -47,8 +47,7 @@ export async function GET(req: NextRequest) {
       method: 'GET',
       headers: {
         accept: 'application/json',
-        Authorization:
-          'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MmVjZWE1NzJkNDZmMmIzNDY1NWVmMmExNjAzZjBmZSIsIm5iZiI6MTcxOTI4MjcwMC44MjM0MDQsInN1YiI6IjVkMGVhNGZlYzNhMzY4MGE2ZjIxMzFiMyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.dlanSIMsJ-OWAp0O2Yr8ZO8nzdhR4e_XLSHCS9c1dPs',
+        Authorization: process.env.TMDB_TOKEN!,
       },
     }
 
