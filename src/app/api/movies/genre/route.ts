@@ -18,7 +18,6 @@ const WORRIED = [
   'Ficção científica',
   'Guerra',
   'Mistério',
-  'Guerra',
   'Faroeste',
 ]
 const NEUTRAL = [
