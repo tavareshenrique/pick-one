@@ -111,9 +111,8 @@ export function Movie() {
     )
 
   return (
-    // <div className="flex flex-col items-center justify-center space-x-4 w-full max-w-3xl gap-16 md:bg-red-500">
-    <div className="flex flex-col items-center justify-center w-full md:space-x-4 md:max-w-3xl md:gap-16">
-      <h1 className="md:text-2xl font-bold text-lg">
+    <div className="flex flex-col items-center justify-center w-full h-full  md:space-x-4 md:max-w-3xl md:gap-16">
+      <h1 className="md:text-2xl font-bold text-lg mt-12 md:mt-0">
         O Filme escolhido pra você hoje é...✨
       </h1>
 
@@ -124,7 +123,7 @@ export function Movie() {
         </p>
       )}
 
-      <section className="flex md:flex-row flex-col mt-8 md:mt-0 items-center justify-center md:space-x-4 w-full gap-4">
+      <section className="flex md:flex-row flex-col mt-8 md:mt-0 items-center justify-center md:space-x-4 w-full gap-4 px-4 md:px-0">
         <Image
           className="w-1/4 rounded-lg"
           src={`https://image.tmdb.org/t/p/w500${selectedMovie.poster_path}`}
