@@ -55,8 +55,8 @@ export function Time() {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center space-y-4 w-1/2 gap-4">
-        <h1 className="text-3xl font-bold text-center">
+      <div className="flex flex-col items-center justify-center space-y-4 md:w-1/2 gap-4">
+        <h1 className="md:text-3xl text-xl font-bold text-center">
           Qual a duração do filme que você gostaria de assistir?
         </h1>
 

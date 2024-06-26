@@ -18,7 +18,6 @@ export function Steps() {
       return <Time />
     }
 
-    console.log('currentStep:', currentStep)
     return <Movie />
   }
 
@@ -29,7 +28,7 @@ export function Steps() {
       {currentStep <= 1 && (
         <div className="w-full flex items-center justify-center">
           <button
-            className="p-4 m-8 text-white bg-blue-500 rounded-lg w-1/4"
+            className="p-4 m-8 text-white bg-blue-500 rounded-lg md:w-1/4 w-full"
             onClick={handleNextStep}
           >
             Avançar

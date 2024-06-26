@@ -95,8 +95,8 @@ export function Feelings() {
 
   return (
     <div className="w-full flex-col flex items-center justify-center gap-16">
-      <div className="flex flex-col items-center justify-center space-y-4 w-1/2 gap-4">
-        <h1 className="text-3xl font-bold text-center">
+      <div className="flex flex-col items-center justify-center space-y-4 md:w-1/2 gap-4">
+        <h1 className="md:text-3xl text-xl font-bold text-center">
           Como você está se sentindo?
         </h1>
 

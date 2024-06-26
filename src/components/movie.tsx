@@ -19,8 +19,6 @@ export interface IMovieData {
 export function Movie() {
   const { feeling, movieTimeInMinutes } = useSteps()
 
-  console.log(`movieTimeInMinutes`, movieTimeInMinutes)
-
   const { data, isLoading, isError } = useQuery({
     queryFn: async () => await movies().GET({ feeling }),
     queryKey: ['movies'],
@@ -99,8 +97,9 @@ export function Movie() {
   if (isError) return <div>Error</div>
 
   return (
-    <div className="flex flex-col items-center justify-center space-x-4 w-full max-w-3xl gap-16">
-      <h1 className="text-2xl font-bold">
+    // <div className="flex flex-col items-center justify-center space-x-4 w-full max-w-3xl gap-16 md:bg-red-500">
+    <div className="flex flex-col items-center justify-center w-full md:space-x-4 md:max-w-3xl md:gap-16">
+      <h1 className="md:text-2xl font-bold text-lg">
         O Filme escolhido pra você hoje é...✨
       </h1>
 
@@ -111,7 +110,7 @@ export function Movie() {
         </p>
       )}
 
-      <section className="flex flex-row items-center justify-center space-x-4 w-full gap-4">
+      <section className="flex md:flex-row flex-col mt-8 md:mt-0 items-center justify-center md:space-x-4 w-full gap-4">
         <Image
           className="w-1/4 rounded-lg"
           src={`https://image.tmdb.org/t/p/w500${selectedMovie.poster_path}`}
@@ -120,14 +119,20 @@ export function Movie() {
           height={400}
         />
 
-        <div className="flex flex-col items-start justify-center space-y-4">
-          <h2 className="text-xl font-bold">{selectedMovie.title}</h2>
+        <div className="flex flex-col justify-center space-y-4 items-center md:items-start ">
+          <h2 className="md:text-xl text-lg font-bold text-center md:text-left">
+            {selectedMovie.title}
+          </h2>
 
-          <p>{selectedMovie.overview}</p>
+          <p className="text-center md:text-left">{selectedMovie.overview}</p>
 
-          <p>Duração: {movieTime} minutos</p>
+          <p>
+            <strong>Duração:</strong> {movieTime} minutos
+          </p>
 
-          <p>Nota: {selectedMovie.vote_average}</p>
+          <p>
+            <strong>Nota:</strong> {selectedMovie.vote_average}
+          </p>
         </div>
       </section>
     </div>
