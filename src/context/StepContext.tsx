@@ -19,8 +19,8 @@ export const StepsContext = createContext<IStepsContext>({} as IStepsContext)
 
 export function StepsProvider({ children }: IStepsProvider) {
   const [currentStep, setCurrentStep] = useState(0)
-  const [feeling, setFeeling] = useState('')
-  const [movieTimeInMinutes, setMovieTimeInMinutes] = useState(0)
+  const [feeling, setFeeling] = useState('neutral')
+  const [movieTimeInMinutes, setMovieTimeInMinutes] = useState(90)
 
   function handleNextStep() {
     setCurrentStep((prev) => prev + 1)

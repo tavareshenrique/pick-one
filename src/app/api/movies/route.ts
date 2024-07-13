@@ -42,7 +42,9 @@ export async function GET(req: NextRequest) {
 
     const genresIds = internalGenresData.map((genre) => genre).join(',')
 
-    const url = `https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=pt-BR&page=1&sort_by=popularity.desc&with_genres=${genresIds}`
+    const randomPage = Math.floor(Math.random() * 10) + 1
+
+    const url = `https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=pt-BR&page=${randomPage}&sort_by=popularity.desc&with_genres=${genresIds}`
     const options = {
       method: 'GET',
       headers: {
@@ -55,16 +57,18 @@ export async function GET(req: NextRequest) {
 
     const movies = (await moviesResponse.json()) as IMovie
 
-    const moviesData = movies.results.map((movie) => {
-      return {
-        id: movie.id,
-        title: movie.title,
-        originalTitle: movie.original_title,
-        overview: movie.overview,
-        poster_path: movie.poster_path,
-        vote_average: movie.vote_average,
-      }
-    })
+    const moviesData = movies.results
+      .map((movie) => {
+        return {
+          id: movie.id,
+          title: movie.title,
+          originalTitle: movie.original_title,
+          overview: movie.overview,
+          poster_path: movie.poster_path,
+          vote_average: movie.vote_average,
+        }
+      })
+      .filter((movie) => movie.overview !== '')
 
     return NextResponse.json(moviesData, { status: 200 })
   } catch (error) {

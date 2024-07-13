@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
 import { useSteps } from '@/context/StepContext'
 import { movies } from '@/modules/movies'
 
-import movieLoadingAnimation from '../assets/lottie/movie-loading.json'
+import movieLoadingAnimation from '../../assets/lottie/movie-loading.json'
 
 export interface IMovieData {
   id: number
@@ -33,54 +33,72 @@ export function Movie() {
   const [movieNotFound, setMovieNotFound] = useState(false)
 
   useEffect(() => {
-    function getNumber(movieList: IMovieData[]) {
+    function getRandomNumber(movieList: IMovieData[]) {
       const randomIndex = Math.floor(Math.random() * movieList.length)
 
       return randomIndex
     }
 
+    async function getFallbackMovie() {
+      const randomIndex = getRandomNumber(data)
+
+      const movieFallback = data[randomIndex]
+
+      const movieTime = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/movies/details/${movieFallback.id}`,
+      )
+
+      const movieFallbackData = await movieTime.json()
+
+      setMovieNotFound(true)
+
+      setSelectedMovie(movieFallback)
+      setMovieTime(movieFallbackData.time)
+    }
+
+    function getMovie(dataMovie: IMovieData[]) {
+      const randomIndex = getRandomNumber(dataMovie)
+
+      const selectedMovie = dataMovie[randomIndex]
+
+      return { selectedMovie }
+    }
+
+    async function getMovieDetail(movieId: number) {
+      const movieTime = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/movies/details/${movieId}`,
+      )
+
+      return await movieTime.json()
+    }
+
     async function chooseMovie(dataMovie: IMovieData[]) {
       try {
-        if (!dataMovie.length) {
-          const randomIndex = getNumber(data)
+        const movieList = dataMovie
 
-          const movieFallback = data[randomIndex]
+        setIsLoadingMovie(true)
 
-          const movieTime = await fetch(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/movies/details/${movieFallback.id}`,
-          )
-
-          const movieFallbackData = await movieTime.json()
-
-          setMovieNotFound(true)
-
-          setSelectedMovie(movieFallback)
-          setMovieTime(movieFallbackData.time)
+        if (!movieList.length) {
+          getFallbackMovie()
 
           return
         }
 
-        setIsLoadingMovie(true)
+        const { selectedMovie } = getMovie(movieList)
 
-        const randomIndex = getNumber(dataMovie)
-
-        const movieFromList = dataMovie[randomIndex]
-
-        const movieTime = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/movies/details/${movieFromList.id}`,
+        const { time: selectedMovieTime } = await getMovieDetail(
+          selectedMovie.id,
         )
 
-        const movieData = await movieTime.json()
-
-        if (movieData.time <= movieTimeInMinutes) {
-          setSelectedMovie(movieFromList)
-          setMovieTime(movieData.time)
+        if (selectedMovieTime <= movieTimeInMinutes) {
+          setSelectedMovie(selectedMovie)
+          setMovieTime(selectedMovieTime)
         } else {
-          const newDataMovie = dataMovie.filter(
-            (movie) => movie.id !== movieFromList.id,
+          const newDataMovieList = movieList.filter(
+            (movie) => movie.id !== selectedMovie.id,
           )
 
-          chooseMovie(newDataMovie)
+          await chooseMovie(newDataMovieList)
         }
       } catch (error) {
         console.error(error)
@@ -96,11 +114,17 @@ export function Movie() {
 
   if (isLoading || isLoadingMovie || !selectedMovie)
     return (
-      <Lottie
-        animationData={movieLoadingAnimation}
-        loop={true}
-        className="w-1/4"
-      />
+      <div className="flex items-center justify-center w-screen h-screen flex-col">
+        <Lottie
+          animationData={movieLoadingAnimation}
+          loop={true}
+          className="w-60"
+        />
+
+        <p className="text-lg mx-4 font-bold ">
+          Buscando a melhor opção pra você...
+        </p>
+      </div>
     )
 
   if (isError)
