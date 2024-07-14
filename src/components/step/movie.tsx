@@ -3,8 +3,9 @@
 import { useQuery } from '@tanstack/react-query'
 import Lottie from 'lottie-react'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
+import { IMovieProviders } from '@/app/api/movies/providers/route'
 import { useSteps } from '@/context/StepContext'
 import { movies } from '@/modules/movies'
 
@@ -28,51 +29,61 @@ export function Movie() {
   })
 
   const [selectedMovie, setSelectedMovie] = useState<IMovieData | null>(null)
+  const [movieProviders, setMoviesProviders] = useState<IMovieProviders | null>(
+    null,
+  )
   const [isLoadingMovie, setIsLoadingMovie] = useState(false)
   const [movieTime, setMovieTime] = useState(0)
   const [movieNotFound, setMovieNotFound] = useState(false)
 
-  useEffect(() => {
-    function getRandomNumber(movieList: IMovieData[]) {
-      const randomIndex = Math.floor(Math.random() * movieList.length)
+  const getRandomNumber = useCallback((movieList: IMovieData[]) => {
+    const randomIndex = Math.floor(Math.random() * movieList.length)
 
-      return randomIndex
-    }
+    return randomIndex
+  }, [])
 
-    async function getFallbackMovie() {
-      const randomIndex = getRandomNumber(data)
+  const getFallbackMovie = useCallback(async () => {
+    const randomIndex = getRandomNumber(data)
 
-      const movieFallback = data[randomIndex]
+    console.log('data', data)
 
-      const movieTime = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/movies/details/${movieFallback.id}`,
-      )
+    const movieFallback = data[randomIndex]
 
-      const movieFallbackData = await movieTime.json()
+    console.log('movieFallback', movieFallback)
 
-      setMovieNotFound(true)
+    const movieTime = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/movies/details/${movieFallback.id}`,
+    )
 
-      setSelectedMovie(movieFallback)
-      setMovieTime(movieFallbackData.time)
-    }
+    const movieFallbackData = await movieTime.json()
 
-    function getMovie(dataMovie: IMovieData[]) {
+    setMovieNotFound(true)
+
+    setSelectedMovie(movieFallback)
+    setMovieTime(movieFallbackData.time)
+  }, [data, getRandomNumber])
+
+  const getMovie = useCallback(
+    (dataMovie: IMovieData[]) => {
       const randomIndex = getRandomNumber(dataMovie)
 
       const selectedMovie = dataMovie[randomIndex]
 
       return { selectedMovie }
-    }
+    },
+    [getRandomNumber],
+  )
 
-    async function getMovieDetail(movieId: number) {
-      const movieTime = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/movies/details/${movieId}`,
-      )
+  const getMovieDetail = useCallback(async (movieId: number) => {
+    const movieTime = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/movies/details/${movieId}`,
+    )
 
-      return await movieTime.json()
-    }
+    return movieTime.json()
+  }, [])
 
-    async function chooseMovie(dataMovie: IMovieData[]) {
+  const chooseMovie = useCallback(
+    async (dataMovie: IMovieData[]) => {
       try {
         const movieList = dataMovie
 
@@ -93,6 +104,14 @@ export function Movie() {
         if (selectedMovieTime <= movieTimeInMinutes) {
           setSelectedMovie(selectedMovie)
           setMovieTime(selectedMovieTime)
+
+          const movieProvidersResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/movies/providers?movieId=${selectedMovie.id}`,
+          )
+
+          const movieProvidersData = await movieProvidersResponse.json()
+
+          setMoviesProviders(movieProvidersData)
         } else {
           const newDataMovieList = movieList.filter(
             (movie) => movie.id !== selectedMovie.id,
@@ -105,12 +124,15 @@ export function Movie() {
       } finally {
         setIsLoadingMovie(false)
       }
-    }
+    },
+    [getFallbackMovie, getMovie, getMovieDetail, movieTimeInMinutes],
+  )
 
+  useEffect(() => {
     if (data) {
       chooseMovie(data)
     }
-  }, [data, movieTimeInMinutes])
+  }, [chooseMovie, data])
 
   if (isLoading || isLoadingMovie || !selectedMovie)
     return (
@@ -156,12 +178,14 @@ export function Movie() {
           height={400}
         />
 
-        <div className="flex flex-col justify-center space-y-4 items-center md:items-start ">
+        <div className="flex flex-col justify-center space-y-4 items-center md:items-start">
           <h2 className="md:text-xl text-lg font-bold text-center md:text-left">
             {selectedMovie.title}
           </h2>
 
-          <p className="text-center md:text-left">{selectedMovie.overview}</p>
+          <p className="text-center md:text-left line-clamp-4 md:line-clamp-6">
+            {selectedMovie.overview}
+          </p>
 
           <p>
             <strong>Duração:</strong> {movieTime} minutos
@@ -170,6 +194,54 @@ export function Movie() {
           <p>
             <strong>Nota:</strong> {selectedMovie.vote_average}
           </p>
+
+          {movieProviders && (
+            <div>
+              <h3 className="text-lg font-bold text-center">Onde assistir?</h3>
+
+              <h4 className="text-center mt-4">Streamings</h4>
+              {movieProviders?.streaming.length ? (
+                <div className="flex items-center justify-center md:justify-start gap-4 mt-2 flex-wrap">
+                  {movieProviders.streaming.map((provider) => (
+                    <Image
+                      key={provider.id}
+                      src={provider.icon}
+                      alt={provider.name}
+                      title={provider.name}
+                      width={48}
+                      height={48}
+                      className="rounded-lg w-12 h-12"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-rose-500 text-center">
+                  Não encontramos opções de streaming para este filme
+                </p>
+              )}
+
+              <h4 className="text-center mt-4">Aluguel</h4>
+              {movieProviders?.rent.length ? (
+                <div className="flex items-center justify-center md:justify-start gap-4 mt-2 flex-wrap">
+                  {movieProviders.rent.map((provider) => (
+                    <Image
+                      key={provider.id}
+                      src={provider.icon}
+                      alt={provider.name}
+                      title={provider.name}
+                      width={48}
+                      height={48}
+                      className="rounded-lg w-12 h-12"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-rose-500 text-center">
+                  Não encontramos opções de aluguel para este filme
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </section>
     </div>

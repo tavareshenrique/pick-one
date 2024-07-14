@@ -1,4 +1,4 @@
-import { Step } from '@/components/step'
+import Step from '@/components/step'
 import { StepsProvider } from '@/context/StepContext'
 
 export default async function Home() {

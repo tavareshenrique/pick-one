@@ -1,7 +1,7 @@
 import { AdvanceButton } from './components/advanceButton'
 import { Steps } from './steps'
 
-export function Step() {
+export default async function Step() {
   return (
     <>
       <Steps />

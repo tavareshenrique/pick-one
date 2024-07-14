@@ -42,9 +42,7 @@ export async function GET(req: NextRequest) {
 
     const genresIds = internalGenresData.map((genre) => genre).join(',')
 
-    const randomPage = Math.floor(Math.random() * 10) + 1
-
-    const url = `https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=pt-BR&page=${randomPage}&sort_by=popularity.desc&with_genres=${genresIds}`
+    const url = `https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=pt-BR&page=1&sort_by=popularity.desc&with_genres=${genresIds}`
     const options = {
       method: 'GET',
       headers: {
@@ -52,6 +50,8 @@ export async function GET(req: NextRequest) {
         Authorization: process.env.TMDB_TOKEN!,
       },
     }
+
+    console.log('url', url)
 
     const moviesResponse = await fetch(url, options)
 
