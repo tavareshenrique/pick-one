@@ -7,6 +7,9 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "engines": {
+    "node": "24.x"
+  },
   "author": {
     "name": "Henrique",
     "email": "ihenrist@gmail.com"
@@ -33,7 +36,7 @@
   },
   "devDependencies": {
     "@rocketseat/eslint-config": "2.2.2",
-    "@types/node": "20",
+    "@types/node": "24",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "eslint": "8",
