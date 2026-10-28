@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Pick One
 
-## Getting Started
+Diga como você está, quanto tempo tem, e receba uma indicação de filme. PWA mobile-first em Next 15 + React 19.
 
-First, run the development server:
+Fluxo: **Humor** (grade de 15 humores com emojis animados, texto livre opcional, "manter / mudar o clima") → **Duração** (presets, "tanto faz" ou mínimo/máximo) → **Resultado** (motivo, onde assistir, "Outro filme", compartilhar, trailer, histórico local).
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local   # preencha TMDB_TOKEN
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Só o `TMDB_TOKEN` é obrigatório. Cada chave abaixo liga uma camada de forma independente:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variável | Liga |
+| --- | --- |
+| `TMDB_TOKEN` | Filmes (obrigatório) |
+| `TYPESAFE_API_KEY` | Jev: leitura do texto livre e ranking dos candidatos |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini: "por que esse filme" e mensagem de apoio |
+| `UPSTASH_REDIS_REST_URL` / `_TOKEN` | Cache, rate limit e budget diário (**a IA só roda com Redis**) |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile invisível |
+| `GEMINI_MODELS` | Modelos do Gemini tentados em ordem (padrão `gemini-3.5-flash-lite,gemini-flash-lite-latest,gemini-3.5-flash`); se todos falharem, o Jev escolhe motivos curados |
+| `AI_DAILY_LIMIT` | Teto global diário de indicações por IA (padrão 800) |
+| `ALLOWED_ORIGINS` | Origens extras aceitas pela API |
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Sem nenhuma chave de IA, Upstash ou Turnstile o app funciona 100% no fallback por gêneros (cache em memória).
 
-## Learn More
+## Arquitetura
 
-To learn more about Next.js, take a look at the following resources:
+`POST /api/recommend` (`src/app/api/recommend/route.ts`) valida com zod e delega para `src/server/recommend.ts`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Guard** (`guard.ts`): Origin, Turnstile, rate limit por IP (5/dia, 3/min), budget global diário. Qualquer falha cai no fallback, nunca em erro.
+2. **Leitura do texto**: heurística local gratuita (`ai/heuristics.ts`, abuso/jailbreak e `sadness`) sempre roda; o Jev refina quando disponível. Prevalece o maior `sadness`.
+3. **Pool** (`candidates.ts`): até 60 filmes reais do TMDB (~40% recentes nos últimos 18 meses, ~60% catálogo), com `with_runtime`, em cache.
+4. **Ranking**: Jev (timeout 3s, confiança mínima) ou fallback por gêneros (`fallback.ts`).
+5. **Top 6** (`select.ts`): respeita a cota de recentes sem forçar lançamento ruim e varia as épocas.
+6. **Textos**: Gemini escreve só `reason` e a mensagem de apoio, depois do ranking, com filtro de tamanho e palavras proibidas; senão entram as frases de `src/config/messages.ts`.
+7. **Cinema** (humores tristes ou por `cinemaWeight`): filme leve em cartaz no Brasil, com "Ver sessões" e "Prefiro ficar em casa". CVV 188 só para `sadness = 2`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+A IA nunca inventa títulos. Provedores ficam atrás das interfaces de `src/server/ai/types.ts` (`TextReader`, `Ranker`, `CopyWriter`).
 
-## Deploy on Vercel
+Ajustes sem mexer em lógica: `src/config/recommend.ts` (`RECENT_RATIO`, `RECENT_MONTHS`, limites, TTLs) e `src/config/moods.ts` (humores, gêneros, `sadness`, `cinemaWeight`).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Jev
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+`src/server/ai/jev.ts` usa `POST https://api.typesafe.ai/v1/systemone` ([docs](https://docs.typesafe.ai/api)): leitura do texto com perguntas `choice` (humor), `score` (sadness) e `noul` (abuso); ranking com uma pergunta `noul` por candidato.
+
+## Anti-abuso
+
+1. Chaves só no servidor, nunca `NEXT_PUBLIC_` (exceto a site key do Turnstile).
+2. Turnstile invisível: sem token válido a requisição não chega na IA.
+3. Rate limit por IP: passou do limite, o usuário ainda recebe filme pelo fallback.
+4. Budget global diário (contador Redis que expira à meia-noite de Brasília).
+5. Cache do pool e do ranking sem texto livre (12h).
+6. Texto classificado como abuso nunca chega no Gemini.
+7. Validação estrita (zod, body ≤ 4 KB, texto ≤ 200, humor como enum, Origin).
+8. "Outro filme" reaproveita o top já buscado, sem nova chamada.
+9. **Operacional**: defina limite de gasto e alerta no console TypeSafe, a quota no Google AI Studio e, se migrar o Gemini para o tier pago, alerta e limite lá também.
+
+## PWA
+
+`src/app/manifest.ts`, ícones gerados em `/icons/*` e `apple-icon`, service worker com Serwist (`src/sw.ts`): assets, emojis e pôsteres em cache, `/api/*` sempre na rede, página `/offline`. O SW só é gerado no build (`pnpm build`), não em `pnpm dev`.
+
+## Créditos
+
+Emojis animados: [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/) do Google, licença CC BY 4.0. Dados de filmes: TMDB (este produto usa a API do TMDB mas não é endossado por ela).

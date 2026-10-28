@@ -36,3 +36,10 @@ yarn-error.log*
 next-env.d.ts
 
 .env
+
+# serwist
+/public/sw.js
+/public/sw.js.map
+/public/swe-worker-*.js
+/public/workbox-*.js
+!.env.example

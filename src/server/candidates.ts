@@ -1,0 +1,204 @@
+import { G, getMood, type Sadness } from '@/config/moods'
+import {
+  NOW_PLAYING_TTL_SECONDS,
+  POOL_RECENT_SHARE,
+  POOL_SIZE,
+  POOL_TTL_SECONDS,
+  RECENT_MONTHS,
+} from '@/config/recommend'
+import type { RecommendRequest } from '@/lib/schema'
+
+import { cached } from './cache'
+import { tmdb, type TmdbListItem } from './tmdb'
+
+export interface Candidate {
+  id: number
+  title: string
+  year: number | null
+  genreIds: number[]
+  overview: string
+  rating: number
+  votes: number
+  popularity: number
+  recent: boolean
+  nowPlaying: boolean
+}
+
+interface TmdbPage {
+  results: TmdbListItem[]
+}
+
+export function recentCutoff(): string {
+  const d = new Date()
+  d.setMonth(d.getMonth() - RECENT_MONTHS)
+  return d.toISOString().slice(0, 10)
+}
+
+function toCandidate(item: TmdbListItem, recent: boolean): Candidate {
+  return {
+    id: item.id,
+    title: item.title,
+    year: item.release_date ? Number(item.release_date.slice(0, 4)) : null,
+    genreIds: item.genre_ids,
+    overview: item.overview,
+    rating: item.vote_average,
+    votes: item.vote_count,
+    popularity: item.popularity,
+    recent,
+    nowPlaying: false,
+  }
+}
+
+/** `wide` une os dois conjuntos: usado quando há texto livre, para a IA decidir. */
+export function moodGenres(
+  req: Pick<RecommendRequest, 'mood' | 'mode'>,
+  wide = false,
+) {
+  const mood = getMood(req.mood)
+  if (wide) return [...new Set([...mood.genresKeep, ...mood.genresShift])]
+  return req.mode === 'shift' ? mood.genresShift : mood.genresKeep
+}
+
+/** Remove combinações de tema muito pesado para quem está arrasado. */
+export function isHeavy(c: Pick<Candidate, 'genreIds'>): boolean {
+  const g = c.genreIds
+  return (
+    g.includes(G.horror) ||
+    g.includes(G.crime) ||
+    g.includes(G.thriller) ||
+    (g.includes(G.drama) && g.includes(G.war)) ||
+    (g.includes(G.drama) && g.includes(G.crime)) ||
+    (g.includes(G.war) && g.includes(G.history))
+  )
+}
+
+export function durationParams(d: RecommendRequest['duration']) {
+  return { 'with_runtime.gte': d.min, 'with_runtime.lte': d.max }
+}
+
+const poolKey = (req: RecommendRequest, sadness: Sadness, wide: boolean) =>
+  `pool:${wide ? 'wide' : req.mode}:${req.mood}:${sadness}:${req.duration.min ?? 'x'}-${req.duration.max ?? 'x'}`
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
+async function discover(
+  genres: number[],
+  req: RecommendRequest,
+  extra: Record<string, string | number>,
+  page: number,
+) {
+  const data = await tmdb<TmdbPage>('/discover/movie', {
+    include_adult: 'false',
+    include_video: 'false',
+    sort_by: 'popularity.desc',
+    with_genres: genres.join('|'),
+    with_original_language: undefined,
+    page,
+    ...durationParams(req.duration),
+    ...extra,
+  })
+  return data.results.filter((r) => r.overview && r.poster_path)
+}
+
+/** Pool de até POOL_SIZE candidatos: ~40% recentes, ~60% catálogo. */
+export async function getPool(
+  req: RecommendRequest,
+  sadness: Sadness,
+  wide = false,
+): Promise<Candidate[]> {
+  return cached(poolKey(req, sadness, wide), POOL_TTL_SECONDS, async () => {
+    const genres = moodGenres(req, wide)
+    const catalogStart = 1 + Math.floor(Math.random() * 3)
+
+    const [recentA, recentB, catA, catB] = await Promise.all([
+      discover(
+        genres,
+        req,
+        { 'primary_release_date.gte': recentCutoff(), 'vote_count.gte': 80 },
+        1,
+      ),
+      discover(
+        genres,
+        req,
+        { 'primary_release_date.gte': recentCutoff(), 'vote_count.gte': 80 },
+        2,
+      ),
+      discover(
+        genres,
+        req,
+        {
+          'primary_release_date.lte': recentCutoff(),
+          'vote_count.gte': 800,
+          'vote_average.gte': 6.5,
+        },
+        catalogStart,
+      ),
+      discover(
+        genres,
+        req,
+        {
+          'primary_release_date.lte': recentCutoff(),
+          'vote_count.gte': 800,
+          'vote_average.gte': 6.5,
+        },
+        catalogStart + 1,
+      ),
+    ])
+
+    const keep = (c: Candidate) =>
+      !(sadness === 2 && req.mode === 'keep' && isHeavy(c))
+    const recent = shuffle(
+      [...recentA, ...recentB].map((i) => toCandidate(i, true)),
+    ).filter(keep)
+    const catalog = shuffle(
+      [...catA, ...catB].map((i) => toCandidate(i, false)),
+    ).filter(keep)
+
+    const nRecent = Math.round(POOL_SIZE * POOL_RECENT_SHARE)
+    const seen = new Set<number>()
+    return [
+      ...recent.slice(0, nRecent),
+      ...catalog.slice(0, POOL_SIZE - nRecent),
+    ].filter((c) => !seen.has(c.id) && !!seen.add(c.id))
+  })
+}
+
+/** Filmes em cartaz no Brasil (compartilhado entre todos, cache de 6h). */
+export async function getNowPlaying(): Promise<Candidate[]> {
+  return cached('nowplaying:br', NOW_PLAYING_TTL_SECONDS, async () => {
+    const data = await tmdb<TmdbPage>('/movie/now_playing', {
+      region: 'BR',
+      page: 1,
+    })
+    return data.results
+      .filter((r) => r.overview && r.poster_path)
+      .map((r) => ({ ...toCandidate(r, true), nowPlaying: true }))
+  })
+}
+
+const LIGHT: number[] = [G.comedy, G.animation, G.family]
+const NOT_LIGHT: number[] = [
+  G.horror,
+  G.war,
+  G.thriller,
+  G.crime,
+  G.mystery,
+  G.action,
+  G.scifi,
+]
+
+/** Opções de tom leve em cartaz (comédia, animação, família; nada pesado). */
+export function lightCinemaOptions(list: Candidate[]): Candidate[] {
+  return list.filter(
+    (c) =>
+      c.genreIds.some((g) => LIGHT.includes(g)) &&
+      !c.genreIds.some((g) => NOT_LIGHT.includes(g)),
+  )
+}

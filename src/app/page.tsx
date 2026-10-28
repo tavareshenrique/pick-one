@@ -1,14 +1,10 @@
-import Step from '@/components/step'
-import { StepsProvider } from '@/context/StepContext'
+import { Flow } from '@/components/flow/flow'
+import { PickProvider } from '@/state/pick'
 
-export default async function Home() {
+export default function Home() {
   return (
-    <StepsProvider>
-      <main className="flex flex-col items-center justify-center h-screen ">
-        <section className="flex flex-col items-center justify-between h-4/5 space-y-4 w-full">
-          <Step />
-        </section>
-      </main>
-    </StepsProvider>
+    <PickProvider>
+      <Flow />
+    </PickProvider>
   )
 }
