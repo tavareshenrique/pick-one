@@ -21,6 +21,7 @@ Só o `TMDB_TOKEN` é obrigatório. Cada chave abaixo liga uma camada de forma i
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini: "por que esse filme" e mensagem de apoio |
 | `UPSTASH_REDIS_REST_URL` / `_TOKEN` | Cache, rate limit e budget diário (**a IA só roda com Redis**) |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile invisível |
+| `GEMINI_MODEL` | Modelo do Gemini (padrão `gemini-3.8-flash`) |
 | `AI_DAILY_LIMIT` | Teto global diário de indicações por IA (padrão 800) |
 | `ALLOWED_ORIGINS` | Origens extras aceitas pela API |
 
@@ -42,9 +43,9 @@ A IA nunca inventa títulos. Provedores ficam atrás das interfaces de `src/serv
 
 Ajustes sem mexer em lógica: `src/config/recommend.ts` (`RECENT_RATIO`, `RECENT_MONTHS`, limites, TTLs) e `src/config/moods.ts` (humores, gêneros, `sadness`, `cinemaWeight`).
 
-### Status do Jev
+### Jev
 
-`src/server/ai/jev.ts` tem os contratos, mas a função `call` ainda lança: o formato da chamada vem da documentação do console TypeSafe (exige a chave). Enquanto isso, a rota usa o fallback. Para integrar, implemente apenas `call`.
+`src/server/ai/jev.ts` usa `POST https://api.typesafe.ai/v1/systemone` ([docs](https://docs.typesafe.ai/api)): leitura do texto com perguntas `choice` (humor), `score` (sadness) e `noul` (abuso); ranking com uma pergunta `noul` por candidato.
 
 ## Anti-abuso
 
