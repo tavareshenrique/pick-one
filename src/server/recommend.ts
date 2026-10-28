@@ -27,9 +27,16 @@ import { canUseAI } from './guard'
 import { type Scored, selectTop } from './select'
 import { getMovieDetails } from './tmdb'
 
-function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | null> {
+function withTimeout<T>(
+  p: Promise<T>,
+  ms: number,
+  label = 'ai',
+): Promise<T | null> {
   return Promise.race([
-    p.catch(() => null),
+    p.catch((e) => {
+      console.warn(`[recommend] ${label} falhou:`, (e as Error).message)
+      return null
+    }),
     new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
   ])
 }
@@ -156,7 +163,8 @@ export async function recommend(
         sadness,
         text: usableText,
       }),
-      7000,
+      9000,
+      'gemini',
     )
     if (copy) {
       for (const m of detailed)

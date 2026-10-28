@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google'
-import { generateObject } from 'ai'
+import { generateText, Output } from 'ai'
 import { z } from 'zod'
 
 import { FORBIDDEN_MESSAGE_PATTERNS } from '@/config/messages'
@@ -31,12 +31,17 @@ export function createGemini(): CopyWriter | null {
           : {}),
       })
 
-      const { object } = await generateObject({
+      const t0 = Date.now()
+      const { output: object } = await generateText({
         model: google(process.env.GEMINI_MODEL || 'gemini-3.8-flash'),
-        schema,
+        output: Output.object({ schema }),
+        providerOptions: {
+          google: { thinkingConfig: { thinkingLevel: 'low' } },
+        },
         maxOutputTokens: 600,
+        maxRetries: 0,
         temperature: 0.7,
-        abortSignal: AbortSignal.timeout(6000),
+        abortSignal: AbortSignal.timeout(8000),
         system: [
           'Você escreve textos curtos em português do Brasil para um app de indicação de filmes.',
           'Os filmes já foram escolhidos: nunca invente títulos nem fatos sobre eles.',
@@ -61,6 +66,7 @@ export function createGemini(): CopyWriter | null {
           .join('\n'),
       })
 
+      console.info(`[gemini] ${Date.now() - t0}ms`)
       const reasons: Record<number, string> = {}
       for (const r of object.reasons) {
         if (movies.some((m) => m.id === r.id) && isValidMessage(r.reason)) {

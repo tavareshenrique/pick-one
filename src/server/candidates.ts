@@ -59,6 +59,8 @@ export function isHeavy(c: Pick<Candidate, 'genreIds'>): boolean {
   const g = c.genreIds
   return (
     g.includes(G.horror) ||
+    g.includes(G.crime) ||
+    g.includes(G.thriller) ||
     (g.includes(G.drama) && g.includes(G.war)) ||
     (g.includes(G.drama) && g.includes(G.crime)) ||
     (g.includes(G.war) && g.includes(G.history))
@@ -175,16 +177,22 @@ export async function getNowPlaying(): Promise<Candidate[]> {
   })
 }
 
-const LIGHT = [G.comedy, G.animation, G.adventure, G.family]
+const LIGHT: number[] = [G.comedy, G.animation, G.family]
+const NOT_LIGHT: number[] = [
+  G.horror,
+  G.war,
+  G.thriller,
+  G.crime,
+  G.mystery,
+  G.action,
+  G.scifi,
+]
 
-/** Opções de tom leve em cartaz (nada de drama pesado ou terror). */
+/** Opções de tom leve em cartaz (comédia, animação, família; nada pesado). */
 export function lightCinemaOptions(list: Candidate[]): Candidate[] {
   return list.filter(
     (c) =>
-      c.genreIds.some((g) => LIGHT.includes(g as (typeof LIGHT)[number])) &&
-      !c.genreIds.includes(G.horror) &&
-      !c.genreIds.includes(G.war) &&
-      !c.genreIds.includes(G.thriller) &&
-      !(c.genreIds.includes(G.drama) && !c.genreIds.includes(G.comedy)),
+      c.genreIds.some((g) => LIGHT.includes(g)) &&
+      !c.genreIds.some((g) => NOT_LIGHT.includes(g)),
   )
 }

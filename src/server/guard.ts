@@ -106,7 +106,13 @@ export async function canUseAI(
   turnstileToken: string | undefined,
 ): Promise<boolean> {
   const l = getLimiters()
-  if (!l) return false
+  if (!l) {
+    // Só para teste local: nunca vale em produção
+    return (
+      process.env.NODE_ENV !== 'production' &&
+      process.env.ALLOW_AI_WITHOUT_REDIS === 'true'
+    )
+  }
   const ip = getIp(req)
 
   if (!(await verifyTurnstile(turnstileToken, ip))) return false
