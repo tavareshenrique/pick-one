@@ -11,7 +11,7 @@ import {
 import type { MoodId } from '@/config/moods'
 import { DURATION_MAX, DURATION_MIN } from '@/config/recommend'
 
-export type Step = 0 | 1 | 2
+export type Step = 0 | 1 | 2 | 3
 export type DurationPreset = 'short' | 'standard' | 'long' | 'any' | 'custom'
 
 export interface Duration {
@@ -65,8 +65,8 @@ function reducer(s: PickState, a: Action): PickState {
     case 'next':
       return {
         ...s,
-        step: Math.min(2, s.step + 1) as Step,
-        run: s.step === 1 ? s.run + 1 : s.run,
+        step: Math.min(3, s.step + 1) as Step,
+        run: s.step === 2 ? s.run + 1 : s.run,
       }
     case 'back':
       return { ...s, step: Math.max(0, s.step - 1) as Step }
