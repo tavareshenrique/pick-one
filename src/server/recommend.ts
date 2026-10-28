@@ -96,9 +96,9 @@ export async function recommend(
   const effective: RecommendRequest = { ...input, mood: mood.id as MoodId }
 
   const exclude = new Set(input.exclude ?? [])
-  const pool = (await getPool(effective, sadness)).filter(
-    (c) => !exclude.has(c.id),
-  )
+  const pool = (
+    await getPool(effective, sadness, !!(aiAllowed && jev && usableText))
+  ).filter((c) => !exclude.has(c.id))
 
   // Ranking: Jev (se permitido) ou fallback por gêneros
   let source: 'ai' | 'fallback' = 'fallback'

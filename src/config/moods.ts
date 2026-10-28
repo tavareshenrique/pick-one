@@ -147,7 +147,7 @@ export const MOODS = [
     label: 'Apaixonado',
     emoji: '1f970',
     genresKeep: [G.romance, G.comedy, G.music],
-    genresShift: [G.thriller, G.mystery, G.drama, G.scifi],
+    genresShift: [G.adventure, G.comedy, G.fantasy, G.action],
     promptHint: 'apaixonado, coração leve',
     sadness: 0,
     cinemaWeight: 0.15,

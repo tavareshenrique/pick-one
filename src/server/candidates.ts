@@ -49,8 +49,13 @@ function toCandidate(item: TmdbListItem, recent: boolean): Candidate {
   }
 }
 
-export function moodGenres(req: Pick<RecommendRequest, 'mood' | 'mode'>) {
+/** `wide` une os dois conjuntos: usado quando há texto livre, para a IA decidir. */
+export function moodGenres(
+  req: Pick<RecommendRequest, 'mood' | 'mode'>,
+  wide = false,
+) {
   const mood = getMood(req.mood)
+  if (wide) return [...new Set([...mood.genresKeep, ...mood.genresShift])]
   return req.mode === 'shift' ? mood.genresShift : mood.genresKeep
 }
 
@@ -71,8 +76,8 @@ export function durationParams(d: RecommendRequest['duration']) {
   return { 'with_runtime.gte': d.min, 'with_runtime.lte': d.max }
 }
 
-const poolKey = (req: RecommendRequest, sadness: Sadness) =>
-  `pool:${req.mood}:${req.mode}:${sadness}:${req.duration.min ?? 'x'}-${req.duration.max ?? 'x'}`
+const poolKey = (req: RecommendRequest, sadness: Sadness, wide: boolean) =>
+  `pool:${wide ? 'wide' : req.mode}:${req.mood}:${sadness}:${req.duration.min ?? 'x'}-${req.duration.max ?? 'x'}`
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -106,9 +111,10 @@ async function discover(
 export async function getPool(
   req: RecommendRequest,
   sadness: Sadness,
+  wide = false,
 ): Promise<Candidate[]> {
-  return cached(poolKey(req, sadness), POOL_TTL_SECONDS, async () => {
-    const genres = moodGenres(req)
+  return cached(poolKey(req, sadness, wide), POOL_TTL_SECONDS, async () => {
+    const genres = moodGenres(req, wide)
     const catalogStart = 1 + Math.floor(Math.random() * 3)
 
     const [recentA, recentB, catA, catB] = await Promise.all([

@@ -153,7 +153,10 @@ export function createJev(): (TextReader & Ranker & CopyWriter) | null {
         `Momento da pessoa: ${ctx.moodHint}.`,
         ctx.mode === 'keep'
           ? 'Ela quer manter o clima em que está.'
-          : 'Ela quer mudar o clima em que está.',
+          : 'Ela quer mudar o clima em que está (preferência secundária).',
+        ctx.text
+          ? 'Se ela escreveu algo, priorize a ocasião ou o desejo descrito no texto acima das outras preferências.'
+          : '',
         ctx.sadness === 2
           ? 'Ela está muito mal: evite temas muito pesados, violentos ou desesperançosos.'
           : '',
