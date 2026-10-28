@@ -23,7 +23,8 @@ export function createGemini(): CopyWriter | null {
     async writeCopy(movies, ctx: CopyContext): Promise<CopyResult | null> {
       // Cadeia de modelos: se um estiver sobrecarregado, tenta o próximo.
       const models = (
-        process.env.GEMINI_MODELS || 'gemini-3.8-flash,gemini-flash-latest'
+        process.env.GEMINI_MODELS ||
+        'gemini-3.5-flash-lite,gemini-flash-lite-latest,gemini-3.5-flash'
       )
         .split(',')
         .map((m) => m.trim())
@@ -57,13 +58,10 @@ async function writeWith(
   const { output: object } = await generateText({
     model: google(modelName),
     output: Output.object({ schema }),
-    providerOptions: {
-      google: { thinkingConfig: { thinkingLevel: 'low' } },
-    },
     maxOutputTokens: 600,
     maxRetries: 0,
     temperature: 0.7,
-    abortSignal: AbortSignal.timeout(4500),
+    abortSignal: AbortSignal.timeout(5000),
     system: [
       'Você escreve textos curtos em português do Brasil para um app de indicação de filmes.',
       'Os filmes já foram escolhidos: nunca invente títulos nem fatos sobre eles.',

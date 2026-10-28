@@ -165,7 +165,11 @@ export async function recommend(
     // Gemini escreve livremente; se cair, o Jev escolhe motivos curados.
     const copy =
       (gemini &&
-        (await withTimeout(gemini.writeCopy(detailed, ctx), 9500, 'gemini'))) ||
+        (await withTimeout(
+          gemini.writeCopy(detailed, ctx),
+          6000,
+          'gemini',
+        ))) ||
       (jev &&
         (await withTimeout(
           jev.writeCopy(detailed, ctx),

@@ -21,7 +21,7 @@ Só o `TMDB_TOKEN` é obrigatório. Cada chave abaixo liga uma camada de forma i
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini: "por que esse filme" e mensagem de apoio |
 | `UPSTASH_REDIS_REST_URL` / `_TOKEN` | Cache, rate limit e budget diário (**a IA só roda com Redis**) |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile invisível |
-| `GEMINI_MODELS` | Modelos do Gemini tentados em ordem (padrão `gemini-3.8-flash,gemini-flash-latest`); se todos falharem, o Jev escolhe motivos curados |
+| `GEMINI_MODELS` | Modelos do Gemini tentados em ordem (padrão `gemini-3.5-flash-lite,gemini-flash-lite-latest,gemini-3.5-flash`); se todos falharem, o Jev escolhe motivos curados |
 | `AI_DAILY_LIMIT` | Teto global diário de indicações por IA (padrão 800) |
 | `ALLOWED_ORIGINS` | Origens extras aceitas pela API |
 
