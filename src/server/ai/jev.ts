@@ -1,7 +1,11 @@
 import { MOODS, type Sadness } from '@/config/moods'
+import { REASON_TEMPLATES } from '@/config/reasons'
 
 import type { Candidate } from '../candidates'
 import type {
+  CopyContext,
+  CopyResult,
+  CopyWriter,
   RankContext,
   Ranker,
   RankResult,
@@ -53,7 +57,7 @@ async function evaluate(
   return data.answers
 }
 
-export function createJev(): (TextReader & Ranker) | null {
+export function createJev(): (TextReader & Ranker & CopyWriter) | null {
   if (!process.env.TYPESAFE_API_KEY) return null
 
   return {
@@ -96,6 +100,47 @@ export function createJev(): (TextReader & Ranker) | null {
         abuse: abuse.noul >= 0.7,
         confidence: sadness.confidence,
       }
+    },
+
+    /** Motivos escolhidos pelo Jev entre textos curados (sem geração livre). */
+    async writeCopy(movies, ctx: CopyContext): Promise<CopyResult | null> {
+      const state = [
+        `Momento da pessoa: ${ctx.moodHint}.`,
+        ctx.mode === 'keep' ? 'Quer manter o clima.' : 'Quer mudar o clima.',
+        ctx.text ? `Ela escreveu: "${ctx.text}"` : '',
+      ]
+        .filter(Boolean)
+        .join('\n')
+
+      const criteria = Object.fromEntries(
+        Object.entries(REASON_TEMPLATES).map(([k, v]) => [k, v.when]),
+      )
+      const questions = Object.fromEntries(
+        movies.map((m) => [
+          `m${m.id}`,
+          {
+            type: 'choice',
+            instructions: `Qual característica deste filme mais combina com o momento da pessoa? Filme: ${m.title} (${m.year ?? '?'}). Sinopse: ${m.overview.slice(0, 240)}`,
+            criteria,
+          },
+        ]),
+      )
+      const answers = await evaluate(state, questions)
+      const reasons: Record<number, string> = {}
+      const used = new Map<string, number>()
+      for (const m of movies) {
+        const a = answers[`m${m.id}`]
+        if (a?.type === 'choice' && a.confidence >= 0.4) {
+          const t = REASON_TEMPLATES[a.choice]
+          if (t) {
+            // varia a frase quando vários filmes caem na mesma categoria
+            const n = used.get(a.choice) ?? 0
+            used.set(a.choice, n + 1)
+            reasons[m.id] = t.text[n % t.text.length]
+          }
+        }
+      }
+      return Object.keys(reasons).length ? { reasons } : null
     },
 
     async rank(

@@ -155,17 +155,23 @@ export async function recommend(
 
   // Gemini: só textos, só sobre filmes já escolhidos
   let message: string | null = null
-  if (source === 'ai' && gemini && detailed.length) {
-    const copy = await withTimeout(
-      gemini.writeCopy(detailed, {
-        moodHint: mood.promptHint,
-        mode: input.mode,
-        sadness,
-        text: usableText,
-      }),
-      9000,
-      'gemini',
-    )
+  if (source === 'ai' && detailed.length) {
+    const ctx = {
+      moodHint: mood.promptHint,
+      mode: input.mode,
+      sadness,
+      text: usableText,
+    }
+    // Gemini escreve livremente; se cair, o Jev escolhe motivos curados.
+    const copy =
+      (gemini &&
+        (await withTimeout(gemini.writeCopy(detailed, ctx), 9500, 'gemini'))) ||
+      (jev &&
+        (await withTimeout(
+          jev.writeCopy(detailed, ctx),
+          AI_TIMEOUT_MS,
+          'jev-copy',
+        )))
     if (copy) {
       for (const m of detailed)
         if (copy.reasons[m.id]) m.reason = copy.reasons[m.id]
