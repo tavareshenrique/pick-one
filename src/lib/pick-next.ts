@@ -1,4 +1,5 @@
 import { RECENT_RATIO } from '@/config/recommend'
+
 import type { MovieResult } from './types'
 
 /**
@@ -19,7 +20,8 @@ export function pickNext(
   const fresh = pool.filter((m) => !history.has(m.id))
   if (fresh.length) pool = fresh
 
-  const wantRecent = lastRecent === null ? Math.random() < RECENT_RATIO : !lastRecent
+  const wantRecent =
+    lastRecent === null ? Math.random() < RECENT_RATIO : !lastRecent
   const group = pool.filter((m) => m.recent === wantRecent)
   const from = group.length ? group : pool
   return from[Math.floor(Math.random() * from.length)]

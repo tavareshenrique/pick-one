@@ -1,4 +1,4 @@
-import { getMood, type Sadness } from '@/config/moods'
+import type { Sadness } from '@/config/moods'
 import type { RecommendRequest } from '@/lib/schema'
 
 import { type Candidate, isHeavy, moodGenres } from './candidates'
@@ -11,9 +11,7 @@ export function fallbackScore(
   sadness: Sadness,
 ): Scored[] {
   const genres = moodGenres(req)
-  const mood = getMood(req.mood)
   const wantsShift = req.mode === 'shift'
-  void mood
 
   return pool
     .filter((c) => !(sadness === 2 && !wantsShift && isHeavy(c)))

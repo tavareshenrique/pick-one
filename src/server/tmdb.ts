@@ -6,7 +6,8 @@ import { cached } from './cache'
 const BASE = 'https://api.themoviedb.org/3'
 
 export const IMG = {
-  poster: (p: string | null) => (p ? `https://image.tmdb.org/t/p/w500${p}` : null),
+  poster: (p: string | null) =>
+    p ? `https://image.tmdb.org/t/p/w500${p}` : null,
   backdrop: (p: string | null) =>
     p ? `https://image.tmdb.org/t/p/w780${p}` : null,
 }
@@ -49,6 +50,13 @@ export interface TmdbListItem {
   popularity: number
 }
 
+interface TmdbProvider {
+  provider_id: number
+  provider_name: string
+  logo_path: string
+  display_priority: number
+}
+
 interface TmdbDetails {
   id: number
   title: string
@@ -69,13 +77,6 @@ interface TmdbDetails {
       }
     }
   }
-}
-
-interface TmdbProvider {
-  provider_id: number
-  provider_name: string
-  logo_path: string
-  display_priority: number
 }
 
 const toProviders = (list: TmdbProvider[] = []): Provider[] =>
@@ -118,7 +119,9 @@ export async function getMovieDetails(
       genres: d.genres.map((g) => g.name),
       recent: flags.recent,
       nowPlaying: flags.nowPlaying,
-      trailer: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null,
+      trailer: trailer
+        ? `https://www.youtube.com/watch?v=${trailer.key}`
+        : null,
       providers: {
         streaming: toProviders(br?.flatrate),
         rent: toProviders(br?.rent),

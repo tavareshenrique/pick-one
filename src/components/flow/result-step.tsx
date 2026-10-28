@@ -1,21 +1,33 @@
 'use client'
 
-import Lottie from 'lottie-react'
-import { Clock, Play, RotateCcw, Share2, Shuffle, Sparkles, Star } from 'lucide-react'
+import {
+  Clock,
+  Play,
+  RotateCcw,
+  Share2,
+  Shuffle,
+  Sparkles,
+  Star,
+} from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { getMood } from '@/config/moods'
 import { addToHistory, getHistory } from '@/lib/history'
 import { pickNext } from '@/lib/pick-next'
-import type { MovieResult, RecommendResponse } from '@/lib/types'
 import { getTurnstileToken } from '@/lib/turnstile'
+import type { MovieResult, RecommendResponse } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { getDuration, usePick } from '@/state/pick'
 
-import movieLoadingAnimation from '../../assets/lottie/movie-loading.json'
 import { fmt } from './duration-step'
+
+const LoadingAnimation = dynamic(() => import('./loading-animation'), {
+  ssr: false,
+  loading: () => <div className="h-52 w-52" />,
+})
 
 type Status = 'loading' | 'error' | 'ready'
 
@@ -41,7 +53,6 @@ export function ResultStep() {
     shown.current = new Set()
     const past = getHistory()
     history.current = new Set(past)
-
     ;(async () => {
       try {
         const turnstileToken = await getTurnstileToken()
@@ -61,7 +72,12 @@ export function ResultStep() {
         if (!res.ok) throw new Error(String(res.status))
         const json = (await res.json()) as RecommendResponse
         setData(json)
-        const first = pickNext(json.movies, shown.current, history.current, null)
+        const first = pickNext(
+          json.movies,
+          shown.current,
+          history.current,
+          null,
+        )
         if (!first) throw new Error('vazio')
         show(first)
         setStatus('ready')
@@ -75,7 +91,12 @@ export function ResultStep() {
 
   function another() {
     if (!data || !movie) return
-    const next = pickNext(data.movies, shown.current, history.current, movie.recent)
+    const next = pickNext(
+      data.movies,
+      shown.current,
+      history.current,
+      movie.recent,
+    )
     if (next) show(next)
   }
 
@@ -97,7 +118,9 @@ export function ResultStep() {
     return (
       <div className="flex flex-col items-center gap-4 py-20 text-center">
         <p className="text-5xl">🎞️</p>
-        <h1 className="font-display text-2xl font-bold">Não deu certo desta vez</h1>
+        <h1 className="font-display text-2xl font-bold">
+          Não deu certo desta vez
+        </h1>
         <p className="text-white/60">
           Não encontramos um filme agora. Tente de novo ou mude a duração.
         </p>
@@ -187,11 +210,15 @@ export function ResultStep() {
                   {movie.year && <span>{movie.year}</span>}
                   {movie.runtime && (
                     <span className="flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5" aria-hidden /> {fmt(movie.runtime)}
+                      <Clock className="h-3.5 w-3.5" aria-hidden />{' '}
+                      {fmt(movie.runtime)}
                     </span>
                   )}
                   <span className="flex items-center gap-1">
-                    <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" aria-hidden />
+                    <Star
+                      className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400"
+                      aria-hidden
+                    />
                     {movie.rating.toFixed(1)}
                   </span>
                 </div>
@@ -206,13 +233,16 @@ export function ResultStep() {
             {movie.reason && (
               <div className="rounded-2xl bg-white/10 p-3 text-sm">
                 <p className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-white/60">
-                  <Sparkles className="h-3 w-3" aria-hidden /> Por que esse filme
+                  <Sparkles className="h-3 w-3" aria-hidden /> Por que esse
+                  filme
                 </p>
                 {movie.reason}
               </div>
             )}
 
-            <p className="text-sm leading-relaxed text-white/80">{movie.overview}</p>
+            <p className="text-sm leading-relaxed text-white/80">
+              {movie.overview}
+            </p>
 
             <Providers movie={movie} />
           </div>
@@ -220,10 +250,17 @@ export function ResultStep() {
       </AnimatePresence>
 
       <div className="grid grid-cols-2 gap-2.5">
-        <Action onClick={another} icon={<Shuffle className="h-4 w-4" />} primary>
+        <Action
+          onClick={another}
+          icon={<Shuffle className="h-4 w-4" />}
+          primary
+        >
           Outro filme
         </Action>
-        <Action onClick={() => dispatch({ type: 'reset' })} icon={<RotateCcw className="h-4 w-4" />}>
+        <Action
+          onClick={() => dispatch({ type: 'reset' })}
+          icon={<RotateCcw className="h-4 w-4" />}
+        >
           Recomeçar
         </Action>
         <Action onClick={share} icon={<Share2 className="h-4 w-4" />}>
@@ -283,7 +320,10 @@ function Providers({ movie }: { movie: MovieResult }) {
   return (
     <div className="flex flex-col gap-2">
       <h2 className="text-sm font-semibold">Onde assistir</h2>
-      <div role="tablist" className="flex gap-1 rounded-full bg-black/30 p-1 text-sm">
+      <div
+        role="tablist"
+        className="flex gap-1 rounded-full bg-black/30 p-1 text-sm"
+      >
         {(
           [
             ['streaming', 'Streaming'],
@@ -321,7 +361,8 @@ function Providers({ movie }: { movie: MovieResult }) {
         </ul>
       ) : (
         <p className="text-sm text-white/50">
-          Sem opções de {tab === 'streaming' ? 'streaming' : 'aluguel'} no Brasil.
+          Sem opções de {tab === 'streaming' ? 'streaming' : 'aluguel'} no
+          Brasil.
         </p>
       )}
     </div>
@@ -386,7 +427,7 @@ function Loading() {
       aria-live="polite"
       className="flex flex-col items-center gap-6 py-10"
     >
-      <Lottie animationData={movieLoadingAnimation} loop className="w-52" />
+      <LoadingAnimation />
       <p className="font-display text-lg font-semibold">
         Buscando a melhor opção pra você…
       </p>

@@ -32,7 +32,11 @@ export function DurationStep() {
         <p className="mt-1 text-white/60">Escolha a duração do filme.</p>
       </header>
 
-      <div role="radiogroup" aria-label="Duração" className="grid grid-cols-2 gap-2.5">
+      <div
+        role="radiogroup"
+        aria-label="Duração"
+        className="grid grid-cols-2 gap-2.5"
+      >
         {PRESETS.map((p) => (
           <button
             key={p.id}
@@ -86,7 +90,10 @@ export function DurationStep() {
                   type="checkbox"
                   checked={checked}
                   onChange={(e) =>
-                    dispatch({ type: 'custom', custom: { [key]: e.target.checked } })
+                    dispatch({
+                      type: 'custom',
+                      custom: { [key]: e.target.checked },
+                    })
                   }
                   className="h-5 w-5 accent-white"
                 />

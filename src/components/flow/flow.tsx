@@ -42,7 +42,10 @@ export function Flow() {
           aria-valuetext={`Etapa ${step + 1} de 3: ${LABELS[step]}`}
         >
           {LABELS.map((l, i) => (
-            <div key={l} className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+            <div
+              key={l}
+              className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10"
+            >
               <motion.div
                 className="h-full rounded-full bg-white"
                 initial={false}

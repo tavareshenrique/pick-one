@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 
 import { SUPPORT_MESSAGES } from '@/config/messages'
-import { getMood, MOODS, type MoodId } from '@/config/moods'
+import { getMood, type MoodId, MOODS } from '@/config/moods'
 import {
   AI_TIMEOUT_MS,
   CINEMA_CHANCE_SADNESS_1,
@@ -11,11 +11,11 @@ import {
 import type { RecommendRequest } from '@/lib/schema'
 import type { MovieResult, RecommendResponse, Sadness } from '@/lib/types'
 
-import { cacheGet, cacheSet } from './cache'
 import { createGemini, isValidMessage } from './ai/gemini'
 import { readTextHeuristic } from './ai/heuristics'
 import { createJev } from './ai/jev'
 import type { RankResult } from './ai/types'
+import { cacheGet, cacheSet } from './cache'
 import {
   type Candidate,
   getNowPlaying,
@@ -30,7 +30,7 @@ import { getMovieDetails } from './tmdb'
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | null> {
   return Promise.race([
     p.catch(() => null),
-    new Promise<null>((r) => setTimeout(() => r(null), ms)),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
   ])
 }
 
@@ -38,7 +38,10 @@ const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
 
 function fitsDuration(runtime: number | null, d: RecommendRequest['duration']) {
   if (!runtime) return true
-  return (d.min === undefined || runtime >= d.min) && (d.max === undefined || runtime <= d.max)
+  return (
+    (d.min === undefined || runtime >= d.min) &&
+    (d.max === undefined || runtime <= d.max)
+  )
 }
 
 export async function recommend(
@@ -53,10 +56,14 @@ export async function recommend(
   const text = input.text?.trim() || undefined
   const heuristic = text ? readTextHeuristic(text) : null
 
-  let aiAllowed = hasAI && !heuristic?.abuse && (await canUseAI(req, input.turnstileToken))
+  let aiAllowed =
+    hasAI && !heuristic?.abuse && (await canUseAI(req, input.turnstileToken))
 
   let moodId = input.mood as string
-  let sadness: Sadness = Math.max(getMood(moodId).sadness, heuristic?.sadness ?? 0) as Sadness
+  let sadness: Sadness = Math.max(
+    getMood(moodId).sadness,
+    heuristic?.sadness ?? 0,
+  ) as Sadness
   let usableText = heuristic?.abuse ? undefined : text
 
   // Jev: leitura do texto livre
@@ -70,7 +77,11 @@ export async function recommend(
         if (reading.mood && MOODS.some((m) => m.id === reading.mood)) {
           moodId = reading.mood as MoodId
         }
-        sadness = Math.max(sadness, reading.sadness, getMood(moodId).sadness) as Sadness
+        sadness = Math.max(
+          sadness,
+          reading.sadness,
+          getMood(moodId).sadness,
+        ) as Sadness
       }
     }
   }
@@ -78,7 +89,9 @@ export async function recommend(
   const effective: RecommendRequest = { ...input, mood: mood.id as MoodId }
 
   const exclude = new Set(input.exclude ?? [])
-  const pool = (await getPool(effective, sadness)).filter((c) => !exclude.has(c.id))
+  const pool = (await getPool(effective, sadness)).filter(
+    (c) => !exclude.has(c.id),
+  )
 
   // Ranking: Jev (se permitido) ou fallback por gêneros
   let source: 'ai' | 'fallback' = 'fallback'
@@ -88,7 +101,9 @@ export async function recommend(
     const cacheKey = usableText
       ? null
       : `rank:${mood.id}:${input.mode}:${sadness}:${input.duration.min ?? 'x'}-${input.duration.max ?? 'x'}`
-    let ranked: RankResult | null = cacheKey ? await cacheGet<RankResult>(cacheKey) : null
+    let ranked: RankResult | null = cacheKey
+      ? await cacheGet<RankResult>(cacheKey)
+      : null
     const coverage = (r: RankResult) =>
       pool.filter((c) => c.id in r.scores).length / Math.max(1, pool.length)
     if (ranked && coverage(ranked) < 0.5) ranked = null
@@ -127,7 +142,9 @@ export async function recommend(
         }),
       ),
     )
-  ).filter((m): m is MovieResult => !!m && fitsDuration(m.runtime, input.duration))
+  ).filter(
+    (m): m is MovieResult => !!m && fitsDuration(m.runtime, input.duration),
+  )
 
   // Gemini: só textos, só sobre filmes já escolhidos
   let message: string | null = null
@@ -142,7 +159,8 @@ export async function recommend(
       7000,
     )
     if (copy) {
-      for (const m of detailed) if (copy.reasons[m.id]) m.reason = copy.reasons[m.id]
+      for (const m of detailed)
+        if (copy.reasons[m.id]) m.reason = copy.reasons[m.id]
       if (sadness >= 1 && copy.message && isValidMessage(copy.message)) {
         message = copy.message.trim()
       }
@@ -173,10 +191,17 @@ async function pickCinema(
   duration: RecommendRequest['duration'],
   exclude: Set<number>,
 ): Promise<MovieResult | null> {
-  const chance = sadness === 2 ? 1 : sadness === 1 ? Math.max(weight, CINEMA_CHANCE_SADNESS_1) : weight
+  const chance =
+    sadness === 2
+      ? 1
+      : sadness === 1
+        ? Math.max(weight, CINEMA_CHANCE_SADNESS_1)
+        : weight
   if (Math.random() > chance) return null
   try {
-    let options: Candidate[] = (await getNowPlaying()).filter((c) => !exclude.has(c.id))
+    let options: Candidate[] = (await getNowPlaying()).filter(
+      (c) => !exclude.has(c.id),
+    )
     if (sadness >= 1) options = lightCinemaOptions(options)
     options = [...options].sort(() => Math.random() - 0.5).slice(0, 4)
     for (const c of options) {

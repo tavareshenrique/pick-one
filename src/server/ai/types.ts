@@ -47,7 +47,12 @@ export interface Ranker {
 }
 export interface CopyWriter {
   writeCopy(
-    movies: { id: number; title: string; year: number | null; overview: string }[],
+    movies: {
+      id: number
+      title: string
+      year: number | null
+      overview: string
+    }[],
     ctx: CopyContext,
   ): Promise<CopyResult | null>
 }

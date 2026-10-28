@@ -26,7 +26,9 @@ export function createGemini(): CopyWriter | null {
         reasons: z.array(
           z.object({ id: z.number(), reason: z.string().max(140) }),
         ),
-        ...(wantsMessage ? { message: z.string().max(MAX_MESSAGE_LENGTH) } : {}),
+        ...(wantsMessage
+          ? { message: z.string().max(MAX_MESSAGE_LENGTH) }
+          : {}),
       })
 
       const { object } = await generateObject({
@@ -51,7 +53,8 @@ export function createGemini(): CopyWriter | null {
           ctx.text ? `<usuario>${ctx.text}</usuario>` : '',
           'Filmes:',
           ...movies.map(
-            (m) => `- id ${m.id}: ${m.title} (${m.year ?? '?'}) - ${m.overview.slice(0, 200)}`,
+            (m) =>
+              `- id ${m.id}: ${m.title} (${m.year ?? '?'}) - ${m.overview.slice(0, 200)}`,
           ),
         ]
           .filter(Boolean)

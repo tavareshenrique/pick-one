@@ -1,9 +1,15 @@
 'use client'
 
-import { createContext, type ReactNode, useContext, useMemo, useReducer } from 'react'
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useMemo,
+  useReducer,
+} from 'react'
 
-import { DURATION_MAX, DURATION_MIN } from '@/config/recommend'
 import type { MoodId } from '@/config/moods'
+import { DURATION_MAX, DURATION_MIN } from '@/config/recommend'
 
 export type Step = 0 | 1 | 2
 export type DurationPreset = 'short' | 'standard' | 'long' | 'any' | 'custom'
@@ -57,7 +63,11 @@ function reducer(s: PickState, a: Action): PickState {
     case 'custom':
       return { ...s, preset: 'custom', custom: { ...s.custom, ...a.custom } }
     case 'next':
-      return { ...s, step: Math.min(2, s.step + 1) as Step, run: s.step === 1 ? s.run + 1 : s.run }
+      return {
+        ...s,
+        step: Math.min(2, s.step + 1) as Step,
+        run: s.step === 1 ? s.run + 1 : s.run,
+      }
     case 'back':
       return { ...s, step: Math.max(0, s.step - 1) as Step }
     case 'reset':
@@ -85,7 +95,10 @@ export function getDuration(s: PickState): Duration {
 
 export const DURATION_RANGE = { min: DURATION_MIN, max: DURATION_MAX }
 
-const Ctx = createContext<{ state: PickState; dispatch: (a: Action) => void } | null>(null)
+const Ctx = createContext<{
+  state: PickState
+  dispatch: (a: Action) => void
+} | null>(null)
 
 export function PickProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initial)

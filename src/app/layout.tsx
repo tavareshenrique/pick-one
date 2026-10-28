@@ -1,6 +1,7 @@
 import './globals.css'
 
 import type { Metadata, Viewport } from 'next'
+// eslint-disable-next-line camelcase
 import { Bricolage_Grotesque, Inter } from 'next/font/google'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -14,7 +15,11 @@ export const metadata: Metadata = {
   description:
     'Me fala o que sente, me fala o que quer sentir, e eu te recomendo um filme baseado nisso.',
   applicationName: 'Pick One',
-  appleWebApp: { capable: true, title: 'Pick One', statusBarStyle: 'black-translucent' },
+  appleWebApp: {
+    capable: true,
+    title: 'Pick One',
+    statusBarStyle: 'black-translucent',
+  },
   formatDetection: { telephone: false },
 }
 

@@ -110,28 +110,65 @@ export async function getPool(
     const catalogStart = 1 + Math.floor(Math.random() * 3)
 
     const [recentA, recentB, catA, catB] = await Promise.all([
-      discover(genres, req, { 'primary_release_date.gte': recentCutoff(), 'vote_count.gte': 80 }, 1),
-      discover(genres, req, { 'primary_release_date.gte': recentCutoff(), 'vote_count.gte': 80 }, 2),
-      discover(genres, req, { 'primary_release_date.lte': recentCutoff(), 'vote_count.gte': 800, 'vote_average.gte': 6.5 }, catalogStart),
-      discover(genres, req, { 'primary_release_date.lte': recentCutoff(), 'vote_count.gte': 800, 'vote_average.gte': 6.5 }, catalogStart + 1),
+      discover(
+        genres,
+        req,
+        { 'primary_release_date.gte': recentCutoff(), 'vote_count.gte': 80 },
+        1,
+      ),
+      discover(
+        genres,
+        req,
+        { 'primary_release_date.gte': recentCutoff(), 'vote_count.gte': 80 },
+        2,
+      ),
+      discover(
+        genres,
+        req,
+        {
+          'primary_release_date.lte': recentCutoff(),
+          'vote_count.gte': 800,
+          'vote_average.gte': 6.5,
+        },
+        catalogStart,
+      ),
+      discover(
+        genres,
+        req,
+        {
+          'primary_release_date.lte': recentCutoff(),
+          'vote_count.gte': 800,
+          'vote_average.gte': 6.5,
+        },
+        catalogStart + 1,
+      ),
     ])
 
-    const keep = (c: Candidate) => !(sadness === 2 && req.mode === 'keep' && isHeavy(c))
-    const recent = shuffle([...recentA, ...recentB].map((i) => toCandidate(i, true))).filter(keep)
-    const catalog = shuffle([...catA, ...catB].map((i) => toCandidate(i, false))).filter(keep)
+    const keep = (c: Candidate) =>
+      !(sadness === 2 && req.mode === 'keep' && isHeavy(c))
+    const recent = shuffle(
+      [...recentA, ...recentB].map((i) => toCandidate(i, true)),
+    ).filter(keep)
+    const catalog = shuffle(
+      [...catA, ...catB].map((i) => toCandidate(i, false)),
+    ).filter(keep)
 
     const nRecent = Math.round(POOL_SIZE * POOL_RECENT_SHARE)
     const seen = new Set<number>()
-    return [...recent.slice(0, nRecent), ...catalog.slice(0, POOL_SIZE - nRecent)].filter(
-      (c) => !seen.has(c.id) && !!seen.add(c.id),
-    )
+    return [
+      ...recent.slice(0, nRecent),
+      ...catalog.slice(0, POOL_SIZE - nRecent),
+    ].filter((c) => !seen.has(c.id) && !!seen.add(c.id))
   })
 }
 
 /** Filmes em cartaz no Brasil (compartilhado entre todos, cache de 6h). */
 export async function getNowPlaying(): Promise<Candidate[]> {
   return cached('nowplaying:br', NOW_PLAYING_TTL_SECONDS, async () => {
-    const data = await tmdb<TmdbPage>('/movie/now_playing', { region: 'BR', page: 1 })
+    const data = await tmdb<TmdbPage>('/movie/now_playing', {
+      region: 'BR',
+      page: 1,
+    })
     return data.results
       .filter((r) => r.overview && r.poster_path)
       .map((r) => ({ ...toCandidate(r, true), nowPlaying: true }))

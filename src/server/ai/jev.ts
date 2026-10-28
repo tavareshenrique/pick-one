@@ -3,8 +3,8 @@ import { MOOD_IDS } from '@/config/moods'
 import type { Candidate } from '../candidates'
 import type {
   RankContext,
-  RankResult,
   Ranker,
+  RankResult,
   TextReader,
   TextReading,
 } from './types'
@@ -21,7 +21,8 @@ import type {
  *  - ranking: candidatos (id, título, ano, gêneros, sinopse curta, flags)
  *             -> nota 0..1 por id + confiança
  */
-async function call<T>(_task: 'read' | 'rank', _payload: unknown): Promise<T> {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function call<T>(task: 'read' | 'rank', payload: unknown): Promise<T> {
   throw new Error('Jev: integração pendente (ver docs do console TypeSafe)')
 }
 

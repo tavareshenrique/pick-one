@@ -56,7 +56,9 @@ export function MoodStep() {
           className="flex flex-col gap-5"
         >
           <fieldset>
-            <legend className="mb-2 text-sm text-white/60">O que você quer?</legend>
+            <legend className="mb-2 text-sm text-white/60">
+              O que você quer?
+            </legend>
             <div className="grid grid-cols-2 gap-2 rounded-2xl bg-white/5 p-1">
               {(
                 [
@@ -70,7 +72,9 @@ export function MoodStep() {
                   onClick={() => dispatch({ type: 'mode', mode })}
                   className={cn(
                     'min-h-12 rounded-xl px-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white',
-                    state.mode === mode ? 'bg-white text-neutral-950' : 'text-white/70',
+                    state.mode === mode
+                      ? 'bg-white text-neutral-950'
+                      : 'text-white/70',
                   )}
                 >
                   {label}
@@ -80,7 +84,9 @@ export function MoodStep() {
           </fieldset>
 
           <label className="flex flex-col gap-2">
-            <span className="text-sm text-white/60">Quer contar mais? (opcional)</span>
+            <span className="text-sm text-white/60">
+              Quer contar mais? (opcional)
+            </span>
             <textarea
               value={state.moodText}
               maxLength={MAX_TEXT_LENGTH}

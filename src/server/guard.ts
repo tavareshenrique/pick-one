@@ -111,10 +111,7 @@ export async function canUseAI(
 
   if (!(await verifyTurnstile(turnstileToken, ip))) return false
   try {
-    const [min, day] = await Promise.all([
-      l.minute.limit(ip),
-      l.day.limit(ip),
-    ])
+    const [min, day] = await Promise.all([l.minute.limit(ip), l.day.limit(ip)])
     if (!min.success || !day.success) return false
   } catch {
     return false

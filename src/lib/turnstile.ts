@@ -15,7 +15,8 @@ let scriptPromise: Promise<void> | null = null
 function loadScript() {
   scriptPromise ??= new Promise<void>((resolve, reject) => {
     const s = document.createElement('script')
-    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+    s.src =
+      'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
     s.async = true
     s.onload = () => resolve()
     s.onerror = () => reject(new Error('turnstile'))

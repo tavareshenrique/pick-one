@@ -40,7 +40,10 @@ export function selectTop(scored: Scored[], size = RESULT_SIZE): Scored[] {
     })
     if (best === -Infinity) break
     const [s] = catalog.splice(bestIdx, 1)
-    usedDecades.set(decade(s.candidate), (usedDecades.get(decade(s.candidate)) ?? 0) + 1)
+    usedDecades.set(
+      decade(s.candidate),
+      (usedDecades.get(decade(s.candidate)) ?? 0) + 1,
+    )
     picked.push(s)
   }
 
