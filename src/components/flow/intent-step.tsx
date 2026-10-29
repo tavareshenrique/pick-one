@@ -10,9 +10,7 @@ export function IntentStep() {
   return (
     <div className="flex flex-col gap-5">
       <fieldset>
-        <legend className="mb-2 text-sm text-white/60">
-          O que você quer?
-        </legend>
+        <legend className="mb-2 text-sm text-white/60">O que você quer?</legend>
         <div className="grid grid-cols-2 gap-2 rounded-2xl bg-white/5 p-1">
           {(
             [
