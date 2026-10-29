@@ -7,10 +7,11 @@ import { getMood } from '@/config/moods'
 import { usePick } from '@/state/pick'
 
 import { DurationStep } from './duration-step'
+import { IntentStep } from './intent-step'
 import { MoodStep } from './mood-step'
 import { ResultStep } from './result-step'
 
-const LABELS = ['Humor', 'Duração', 'Resultado']
+const LABELS = ['Humor', 'Clima', 'Duração', 'Resultado']
 
 export function Flow() {
   const { state, dispatch } = usePick()
@@ -37,9 +38,9 @@ export function Flow() {
           className="flex flex-1 gap-1.5"
           role="progressbar"
           aria-valuemin={1}
-          aria-valuemax={3}
+          aria-valuemax={4}
           aria-valuenow={step + 1}
-          aria-valuetext={`Etapa ${step + 1} de 3: ${LABELS[step]}`}
+          aria-valuetext={`Etapa ${step + 1} de 4: ${LABELS[step]}`}
         >
           {LABELS.map((l, i) => (
             <div
@@ -55,7 +56,7 @@ export function Flow() {
           ))}
         </div>
         <span className="w-12 text-right font-display text-sm text-white/60">
-          {step + 1}/3
+          {step + 1}/4
         </span>
       </header>
 
@@ -69,20 +70,21 @@ export function Flow() {
             transition={{ duration: 0.2 }}
           >
             {step === 0 && <MoodStep />}
-            {step === 1 && <DurationStep />}
-            {step === 2 && <ResultStep />}
+            {step === 1 && <IntentStep />}
+            {step === 2 && <DurationStep />}
+            {step === 3 && <ResultStep />}
           </motion.div>
         </AnimatePresence>
       </main>
 
-      {step < 2 && (
+      {step < 3 && (
         <footer className="sticky bottom-0 bg-gradient-to-t from-neutral-950 via-neutral-950/90 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-6">
           <button
             disabled={!canAdvance}
             onClick={() => dispatch({ type: 'next' })}
             className="mx-auto block min-h-14 w-full max-w-2xl rounded-full bg-white text-base font-semibold text-neutral-950 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 disabled:opacity-40"
           >
-            {step === 0 ? 'Continuar' : 'Indicar um filme'}
+            {step < 2 ? 'Continuar' : 'Indicar um filme'}
           </button>
         </footer>
       )}
