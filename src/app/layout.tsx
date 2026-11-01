@@ -11,7 +11,7 @@ const display = Bricolage_Grotesque({
 })
 
 export const metadata: Metadata = {
-  title: 'Pick One',
+  title: 'Pick One Movie',
   description:
     'Me fala o que sente, me fala o que quer sentir, e eu te recomendo um filme baseado nisso.',
   applicationName: 'Pick One',

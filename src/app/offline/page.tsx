@@ -1,4 +1,4 @@
-export const metadata = { title: 'Sem conexão • Pick One' }
+export const metadata = { title: 'Sem conexão • Pick One Movie' }
 
 export default function Offline() {
   return (
