@@ -10,7 +10,6 @@ import {
   Star,
 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -23,11 +22,6 @@ import { cn } from '@/lib/utils'
 import { getDuration, usePick } from '@/state/pick'
 
 import { fmt } from './duration-step'
-
-const LoadingAnimation = dynamic(() => import('./loading-animation'), {
-  ssr: false,
-  loading: () => <div className="h-52 w-52" />,
-})
 
 type Status = 'loading' | 'error' | 'ready'
 
@@ -422,15 +416,8 @@ function CinemaCard({
 
 function Loading() {
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="flex flex-col items-center gap-6 py-10"
-    >
-      <LoadingAnimation />
-      <p className="font-display text-lg font-semibold">
-        Buscando a melhor opção pra você…
-      </p>
+    <div role="status" aria-live="polite" className="flex flex-col gap-5">
+      <p className="sr-only">Buscando a melhor opção pra você…</p>
       <div className="w-full animate-pulse space-y-3" aria-hidden>
         <div className="flex gap-4 rounded-3xl bg-white/5 p-4">
           <div className="h-48 w-32 rounded-xl bg-white/10" />
