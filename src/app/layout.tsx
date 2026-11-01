@@ -1,5 +1,6 @@
 import './globals.css'
 
+import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 // eslint-disable-next-line camelcase
 import { Bricolage_Grotesque, Inter } from 'next/font/google'
@@ -39,6 +40,7 @@ export default function RootLayout({
         className={`${inter.variable} ${display.variable} bg-neutral-950 font-sans text-white antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   )
