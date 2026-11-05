@@ -1,6 +1,12 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [{ "type": "host", "value": "pick-one-movie\\.vercel\\.app" }],
+      "destination": "https://pick-one.app",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [{ "type": "host", "value": "pick-one-movie\\.vercel\\.app" }],
       "destination": "https://pick-one.app/:path*",
