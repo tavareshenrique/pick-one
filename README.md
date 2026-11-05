@@ -130,6 +130,7 @@ Cada chave liga uma camada sozinha. O modelo está em [`.env.example`](.env.exam
 | `AI_DAILY_LIMIT` | Teto global de indicações por IA por dia. Padrão: `800`. |
 | `ALLOWED_ORIGINS` | Origens extras aceitas pela API, separadas por vírgula. |
 | `ALLOW_AI_WITHOUT_REDIS` | Só em desenvolvimento. Libera a IA sem Redis. Em produção é ignorada. |
+| `NEXT_PUBLIC_ADSENSE_CLIENT` / `NEXT_PUBLIC_ADSENSE_SLOT` | Anúncio na tela de resultado. O `/ads.txt` sai do client id. Sem as duas, nada aparece. |
 
 Os números que mudam o gosto da indicação, sem mexer em lógica, moram em [`src/config/recommend.ts`](src/config/recommend.ts) (`RECENT_RATIO`, `RECENT_MONTHS`, limites, TTLs) e em [`src/config/moods.ts`](src/config/moods.ts) (humores, gêneros, `sadness`, `cinemaWeight`).
 
@@ -173,7 +174,7 @@ Os provedores ficam atrás das interfaces de [`src/server/ai/types.ts`](src/serv
 
 ### Anti-abuso
 
-1. Chaves só no servidor. Nada de `NEXT_PUBLIC_`, fora a site key do Turnstile.
+1. Chaves só no servidor. Nada de `NEXT_PUBLIC_`, fora a site key do Turnstile e os ids do AdSense.
 2. Turnstile invisível: sem token válido, a requisição não chega na IA.
 3. Limite por IP: passou da cota, a pessoa ainda recebe um filme pelo fallback.
 4. Teto global diário, num contador do Redis que expira à meia-noite de Brasília.
