@@ -13,6 +13,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { AdSlot } from '@/components/ads/ad-slot'
 import { getMood } from '@/config/moods'
 import { addToHistory, getHistory } from '@/lib/history'
 import { pickNext } from '@/lib/pick-next'
@@ -274,10 +275,12 @@ export function ResultStep() {
         )}
       </div>
 
-      {data.showCvv && (
+      {data.showCvv ? (
         <p className="text-center text-xs text-white/50">
           Se estiver pesado demais, conversar ajuda: CVV 188, 24h, gratuito.
         </p>
+      ) : (
+        <AdSlot />
       )}
     </div>
   )
