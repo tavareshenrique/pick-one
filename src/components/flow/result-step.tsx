@@ -18,7 +18,7 @@ import { getMood } from '@/config/moods'
 import { addToHistory, getHistory } from '@/lib/history'
 import { pickNext } from '@/lib/pick-next'
 import { getTurnstileToken } from '@/lib/turnstile'
-import type { MovieResult, RecommendResponse } from '@/lib/types'
+import type { MovieResult, Provider, RecommendResponse } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { getDuration, usePick } from '@/state/pick'
 
@@ -345,14 +345,7 @@ function Providers({ movie }: { movie: MovieResult }) {
         <ul className="flex flex-wrap gap-3">
           {list.map((p) => (
             <li key={p.id}>
-              <Image
-                src={p.icon}
-                alt={p.name}
-                title={p.name}
-                width={44}
-                height={44}
-                className="h-11 w-11 rounded-xl"
-              />
+              <ProviderLogo provider={p} title={movie.title} />
             </li>
           ))}
         </ul>
@@ -362,7 +355,40 @@ function Providers({ movie }: { movie: MovieResult }) {
           Brasil.
         </p>
       )}
+      <p className="text-xs text-white/40">Disponibilidade por JustWatch</p>
     </div>
+  )
+}
+
+function ProviderLogo({
+  provider,
+  title,
+}: {
+  provider: Provider
+  title: string
+}) {
+  const image = (
+    <Image
+      src={provider.icon}
+      alt={provider.url ? '' : provider.name}
+      title={provider.name}
+      width={44}
+      height={44}
+      className="h-11 w-11 rounded-xl"
+    />
+  )
+  if (!provider.url) return image
+  return (
+    <a
+      href={provider.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Assistir ${title} no ${provider.name}`}
+      title={provider.name}
+      className="block h-11 w-11 overflow-hidden rounded-xl outline-none transition duration-150 hover:brightness-125 hover:ring-2 hover:ring-inset hover:ring-white/80 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
+    >
+      {image}
+    </a>
   )
 }
 

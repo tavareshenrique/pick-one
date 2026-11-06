@@ -2,6 +2,7 @@ import { DETAILS_TTL_SECONDS } from '@/config/recommend'
 import type { MovieResult, Provider } from '@/lib/types'
 
 import { cached } from './cache'
+import { getStreamingLinks } from './justwatch'
 
 const BASE = 'https://api.themoviedb.org/3'
 
@@ -60,6 +61,7 @@ interface TmdbProvider {
 interface TmdbDetails {
   id: number
   title: string
+  original_title?: string
   overview: string
   runtime: number | null
   poster_path: string | null
@@ -79,14 +81,24 @@ interface TmdbDetails {
   }
 }
 
-const toProviders = (list: TmdbProvider[] = []): Provider[] =>
+const toProviders = (
+  list: TmdbProvider[] = [],
+  links: Record<string, string> = {},
+): Provider[] =>
   [...list]
     .sort((a, b) => a.display_priority - b.display_priority)
     .map((p) => ({
       id: p.provider_id,
       name: p.provider_name,
       icon: `https://image.tmdb.org/t/p/w92${p.logo_path}`,
+      url: links[String(p.provider_id)] ?? null,
     }))
+
+function releaseYear(date: string | undefined): number | null {
+  if (!date) return null
+  const year = Number(date.slice(0, 4))
+  return Number.isInteger(year) ? year : null
+}
 
 export interface MovieFlags {
   recent: boolean
@@ -104,13 +116,20 @@ export async function getMovieDetails(
       }),
     )
     const br = d['watch/providers']?.results?.BR
+    const year = releaseYear(d.release_date)
+    const links = await getStreamingLinks({
+      id: d.id,
+      title: d.title,
+      originalTitle: d.original_title?.trim() || null,
+      year,
+    })
     const trailer = d.videos?.results.find(
       (v) => v.site === 'YouTube' && v.type === 'Trailer',
     )
     return {
       id: d.id,
       title: d.title,
-      year: d.release_date ? Number(d.release_date.slice(0, 4)) : null,
+      year,
       runtime: d.runtime || null,
       rating: Math.round(d.vote_average * 10) / 10,
       overview: d.overview,
@@ -123,8 +142,8 @@ export async function getMovieDetails(
         ? `https://www.youtube.com/watch?v=${trailer.key}`
         : null,
       providers: {
-        streaming: toProviders(br?.flatrate),
-        rent: toProviders(br?.rent),
+        streaming: toProviders(br?.flatrate, links),
+        rent: toProviders(br?.rent, links),
       },
     }
   } catch {

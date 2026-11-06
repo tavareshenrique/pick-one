@@ -4,6 +4,8 @@ export interface Provider {
   id: number
   name: string
   icon: string
+  /** Ficha do filme no serviço. Null quando o JustWatch não devolve um https. */
+  url: string | null
 }
 
 export interface MovieResult {
