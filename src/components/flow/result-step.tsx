@@ -15,6 +15,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { AdSlot } from '@/components/ads/ad-slot'
 import { getMood } from '@/config/moods'
+import { getVisitId, track } from '@/lib/analytics'
+import { toAnalyticsMovie } from '@/lib/analytics-movie'
 import { addToHistory, getHistory } from '@/lib/history'
 import { pickNext } from '@/lib/pick-next'
 import { getTurnstileToken } from '@/lib/turnstile'
@@ -39,6 +41,7 @@ export function ResultStep() {
     shown.current.add(m.id)
     addToHistory(m.id)
     setMovie(m)
+    track({ name: 'movie_shown', props: { movie: toAnalyticsMovie(m) } })
   }, [])
 
   useEffect(() => {
@@ -60,6 +63,8 @@ export function ResultStep() {
             mode: state.mode,
             text: state.moodText.trim() || undefined,
             duration: getDuration(state),
+            preset: state.preset,
+            visitId: getVisitId(),
             turnstileToken,
             exclude: past.slice(0, 30),
           }),
@@ -77,7 +82,9 @@ export function ResultStep() {
         show(first)
         setStatus('ready')
       } catch (e) {
-        if ((e as Error).name !== 'AbortError') setStatus('error')
+        if ((e as Error).name === 'AbortError') return
+        track({ name: 'recommend_error', props: { status: errorStatus(e) } })
+        setStatus('error')
       }
     })()
     return () => ctrl.abort()
@@ -92,7 +99,9 @@ export function ResultStep() {
       history.current,
       movie.recent,
     )
-    if (next) show(next)
+    if (!next) return
+    track({ name: 'another', props: { movieId: movie.id } })
+    show(next)
   }
 
   async function share() {
@@ -103,8 +112,16 @@ export function ResultStep() {
       url: window.location.origin,
     }
     try {
-      if (navigator.share) await navigator.share(payload)
-      else await navigator.clipboard.writeText(`${payload.text} ${payload.url}`)
+      if (navigator.share) {
+        await navigator.share(payload)
+        track({ name: 'share', props: { movieId: movie.id, via: 'share' } })
+      } else {
+        await navigator.clipboard.writeText(`${payload.text} ${payload.url}`)
+        track({
+          name: 'share',
+          props: { movieId: movie.id, via: 'clipboard' },
+        })
+      }
     } catch {}
   }
 
@@ -121,13 +138,22 @@ export function ResultStep() {
         </p>
         <div className="flex gap-2">
           <button
-            onClick={() => dispatch({ type: 'back' })}
+            onClick={() => {
+              track({
+                name: 'back',
+                props: { from: 'Resultado', to: 'Duração' },
+              })
+              dispatch({ type: 'back' })
+            }}
             className="min-h-12 rounded-full bg-white/10 px-5"
           >
             Voltar
           </button>
           <button
-            onClick={() => dispatch({ type: 'reset' })}
+            onClick={() => {
+              track({ name: 'restart', props: { from: 'error' } })
+              dispatch({ type: 'reset' })
+            }}
             className="min-h-12 rounded-full bg-white px-5 font-semibold text-neutral-950"
           >
             Recomeçar
@@ -253,7 +279,10 @@ export function ResultStep() {
           Outro filme
         </Action>
         <Action
-          onClick={() => dispatch({ type: 'reset' })}
+          onClick={() => {
+            track({ name: 'restart', props: { from: 'result' } })
+            dispatch({ type: 'reset' })
+          }}
           icon={<RotateCcw className="h-4 w-4" />}
         >
           Recomeçar
@@ -266,6 +295,9 @@ export function ResultStep() {
             href={movie.trailer}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() =>
+              track({ name: 'trailer', props: { movieId: movie.id } })
+            }
             className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-white/10 px-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             <Play className="h-4 w-4" /> Trailer
@@ -345,7 +377,12 @@ function Providers({ movie }: { movie: MovieResult }) {
         <ul className="flex flex-wrap gap-3">
           {list.map((p) => (
             <li key={p.id}>
-              <ProviderLogo provider={p} title={movie.title} />
+              <ProviderLogo
+                provider={p}
+                title={movie.title}
+                movieId={movie.id}
+                kind={tab}
+              />
             </li>
           ))}
         </ul>
@@ -363,9 +400,13 @@ function Providers({ movie }: { movie: MovieResult }) {
 function ProviderLogo({
   provider,
   title,
+  movieId,
+  kind,
 }: {
   provider: Provider
   title: string
+  movieId: number
+  kind: 'streaming' | 'rent'
 }) {
   const image = (
     <Image
@@ -385,6 +426,12 @@ function ProviderLogo({
       rel="noopener noreferrer"
       aria-label={`Assistir ${title} no ${provider.name}`}
       title={provider.name}
+      onClick={() =>
+        track({
+          name: 'provider',
+          props: { movieId, kind, name: provider.name },
+        })
+      }
       className="block h-11 w-11 overflow-hidden rounded-xl outline-none transition duration-150 hover:brightness-125 hover:ring-2 hover:ring-inset hover:ring-white/80 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
     >
       {image}
@@ -427,12 +474,32 @@ function CinemaCard({
             href={`https://www.google.com/search?q=${q}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() =>
+              track({
+                name: 'cinema',
+                props: {
+                  action: 'sessions',
+                  movieId: movie.id,
+                  title: movie.title,
+                },
+              })
+            }
             className="flex min-h-12 items-center rounded-full bg-white px-4 text-sm font-semibold text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             Ver sessões
           </a>
           <button
-            onClick={onDismiss}
+            onClick={() => {
+              track({
+                name: 'cinema',
+                props: {
+                  action: 'stay',
+                  movieId: movie.id,
+                  title: movie.title,
+                },
+              })
+              onDismiss()
+            }}
             className="min-h-12 rounded-full bg-white/10 px-4 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             Prefiro ficar em casa
@@ -441,6 +508,12 @@ function CinemaCard({
       </div>
     </motion.section>
   )
+}
+
+function errorStatus(error: unknown) {
+  const message = error instanceof Error ? error.message : ''
+  if (/^\d{3}$/.test(message) || message === 'vazio') return message
+  return 'rede'
 }
 
 function Loading() {

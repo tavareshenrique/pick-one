@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 
 import { getMood } from '@/config/moods'
+import { FLOW_STEPS, track } from '@/lib/analytics'
 import { usePick } from '@/state/pick'
 
 import { DurationStep } from './duration-step'
@@ -11,7 +12,7 @@ import { IntentStep } from './intent-step'
 import { MoodStep } from './mood-step'
 import { ResultStep } from './result-step'
 
-const LABELS = ['Humor', 'Clima', 'Duração', 'Resultado']
+const LABELS = FLOW_STEPS
 
 export function Flow() {
   const { state, dispatch } = usePick()
@@ -27,7 +28,14 @@ export function Flow() {
     >
       <header className="mx-auto flex w-full max-w-2xl items-center gap-3 px-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <button
-          onClick={() => dispatch({ type: 'back' })}
+          onClick={() => {
+            if (step === 0) return
+            track({
+              name: 'back',
+              props: { from: LABELS[step], to: LABELS[step - 1] },
+            })
+            dispatch({ type: 'back' })
+          }}
           aria-label="Voltar"
           disabled={step === 0}
           className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:invisible"
@@ -81,7 +89,13 @@ export function Flow() {
         <footer className="sticky bottom-0 bg-gradient-to-t from-neutral-950 via-neutral-950/90 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-6">
           <button
             disabled={!canAdvance}
-            onClick={() => dispatch({ type: 'next' })}
+            onClick={() => {
+              const from = LABELS[step]
+              if (from !== 'Resultado') {
+                track({ name: 'step_continue', props: { step: from } })
+              }
+              dispatch({ type: 'next' })
+            }}
             className="mx-auto block min-h-14 w-full max-w-2xl rounded-full bg-white text-base font-semibold text-neutral-950 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 disabled:opacity-40"
           >
             {step < 2 ? 'Continuar' : 'Indicar um filme'}

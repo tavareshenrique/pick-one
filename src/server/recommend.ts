@@ -15,6 +15,7 @@ import { createGemini, isValidMessage } from './ai/gemini'
 import { readTextHeuristic } from './ai/heuristics'
 import { createJev } from './ai/jev'
 import type { RankResult } from './ai/types'
+import { recordRecommendation } from './analytics/record'
 import { cacheGet, cacheSet } from './cache'
 import {
   type Candidate,
@@ -62,9 +63,8 @@ export async function recommend(
   // Rede de segurança local: sempre roda, é gratuita.
   const text = input.text?.trim() || undefined
   const heuristic = text ? readTextHeuristic(text) : null
-
-  let aiAllowed =
-    hasAI && !heuristic?.abuse && (await canUseAI(req, input.turnstileToken))
+  let abuse = !!heuristic?.abuse
+  let aiAllowed = hasAI && !abuse && (await canUseAI(req, input.turnstileToken))
 
   let moodId = input.mood as string
   let sadness: Sadness = Math.max(
@@ -80,6 +80,7 @@ export async function recommend(
       if (reading.abuse) {
         aiAllowed = false
         usableText = undefined
+        abuse = true
       } else if (reading.confidence >= MIN_AI_CONFIDENCE) {
         if (reading.mood && MOODS.some((m) => m.id === reading.mood)) {
           moodId = reading.mood as MoodId
@@ -189,13 +190,26 @@ export async function recommend(
     new Set([...exclude, ...detailed.map((m) => m.id)]),
   )
 
+  const showCvv = sadness === 2
+  await recordRecommendation({
+    input,
+    inferredMoodId: mood.id,
+    text: usableText ?? null,
+    abuse,
+    source,
+    sadness,
+    showCvv,
+    movies: detailed,
+    cinema,
+  })
+
   return {
     source,
     movies: detailed,
     cinema,
     message,
     sadness,
-    showCvv: sadness === 2,
+    showCvv,
   }
 }
 

@@ -2,6 +2,8 @@ import { Ratelimit } from '@upstash/ratelimit'
 import { NextRequest } from 'next/server'
 
 import {
+  ANALYTICS_RATE_LIMIT_PER_DAY,
+  ANALYTICS_RATE_LIMIT_PER_MINUTE,
   DEFAULT_AI_DAILY_LIMIT,
   RATE_LIMIT_PER_DAY,
   RATE_LIMIT_PER_MINUTE,
@@ -51,6 +53,7 @@ async function verifyTurnstile(token: string | undefined, ip: string) {
 }
 
 let limiters: { day: Ratelimit; minute: Ratelimit } | null = null
+let analyticsLimiters: { day: Ratelimit; minute: Ratelimit } | null = null
 
 function getLimiters() {
   const redis = getRedis()
@@ -68,6 +71,43 @@ function getLimiters() {
     }),
   }
   return limiters
+}
+
+function getAnalyticsLimiters() {
+  const redis = getRedis()
+  if (!redis) return null
+  analyticsLimiters ??= {
+    day: new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(ANALYTICS_RATE_LIMIT_PER_DAY, '1 d'),
+      prefix: 'rl:analytics:day',
+    }),
+    minute: new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(ANALYTICS_RATE_LIMIT_PER_MINUTE, '1 m'),
+      prefix: 'rl:analytics:min',
+    }),
+  }
+  return analyticsLimiters
+}
+
+/**
+ * Limite próprio dos eventos de produto. Sem Upstash, não limita.
+ * Estourou: o chamador responde vazio e descarta. O IP fica só na chave do Redis.
+ */
+export async function allowAnalytics(req: NextRequest): Promise<boolean> {
+  const analytics = getAnalyticsLimiters()
+  if (!analytics) return true
+  try {
+    const ip = getIp(req)
+    const [minute, day] = await Promise.all([
+      analytics.minute.limit(ip),
+      analytics.day.limit(ip),
+    ])
+    return minute.success && day.success
+  } catch {
+    return true
+  }
 }
 
 function secondsUntilMidnightBR(): number {

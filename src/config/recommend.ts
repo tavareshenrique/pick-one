@@ -22,6 +22,9 @@ export const MAX_MESSAGE_LENGTH = 160
 
 export const RATE_LIMIT_PER_DAY = 5
 export const RATE_LIMIT_PER_MINUTE = 3
+/** Limite próprio do analytics, separado do da IA. O IP não é gravado. */
+export const ANALYTICS_RATE_LIMIT_PER_MINUTE = 60
+export const ANALYTICS_RATE_LIMIT_PER_DAY = 500
 export const DEFAULT_AI_DAILY_LIMIT = 800
 
 export const DURATION_MIN = 60
