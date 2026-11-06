@@ -131,6 +131,7 @@ Cada chave liga uma camada sozinha. O modelo está em [`.env.example`](.env.exam
 | `ALLOWED_ORIGINS` | Origens extras aceitas pela API, separadas por vírgula. |
 | `ALLOW_AI_WITHOUT_REDIS` | Só em desenvolvimento. Libera a IA sem Redis. Em produção é ignorada. |
 | `NEXT_PUBLIC_ADSENSE_CLIENT` / `NEXT_PUBLIC_ADSENSE_SLOT` | Anúncio na tela de resultado. O `/ads.txt` sai do client id. Sem as duas, nada aparece. |
+| `DATABASE_URL` | Analytics no Neon. Opcional. Sem ela, o evento é descartado e o filme segue. |
 
 Os números que mudam o gosto da indicação, sem mexer em lógica, moram em [`src/config/recommend.ts`](src/config/recommend.ts) (`RECENT_RATIO`, `RECENT_MONTHS`, limites, TTLs) e em [`src/config/moods.ts`](src/config/moods.ts) (humores, gêneros, `sadness`, `cinemaWeight`).
 

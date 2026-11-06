@@ -9,6 +9,14 @@ const minutes = z
   .min(DURATION_MIN - 1)
   .max(600)
 
+const durationPresetSchema = z.enum([
+  'short',
+  'standard',
+  'long',
+  'any',
+  'custom',
+])
+
 export const recommendRequestSchema = z
   .object({
     mood: moodIdSchema,
@@ -24,6 +32,9 @@ export const recommendRequestSchema = z
       ),
     turnstileToken: z.string().max(2048).optional(),
     exclude: z.array(z.number().int()).max(200).optional(),
+    // Só analytics. Não entram na escolha do filme.
+    visitId: z.uuid().optional(),
+    preset: durationPresetSchema.optional(),
   })
   .strict()
 

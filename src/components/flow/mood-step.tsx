@@ -4,6 +4,7 @@ import { motion } from 'motion/react'
 
 import { Emoji } from '@/components/emoji'
 import { MOODS } from '@/config/moods'
+import { track } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
 import { usePick } from '@/state/pick'
 
@@ -32,7 +33,10 @@ export function MoodStep() {
               role="radio"
               aria-checked={selected}
               whileTap={{ scale: 0.95 }}
-              onClick={() => dispatch({ type: 'mood', mood: m.id })}
+              onClick={() => {
+                track({ name: 'mood_select', props: { id: m.id } })
+                dispatch({ type: 'mood', mood: m.id })
+              }}
               className={cn(
                 'flex min-h-[104px] flex-col items-center justify-center gap-1 rounded-2xl border px-1 py-3 text-sm transition-colors',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white',
