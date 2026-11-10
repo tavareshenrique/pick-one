@@ -4,10 +4,31 @@ import { useEffect, useRef, useState } from 'react'
 
 import { getAdsenseClient, getAdsenseSlot } from '@/lib/adsense'
 
+const ADSENSE_SCRIPT =
+  'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'
+
+type AdsByGoogle = unknown[] & {
+  requestNonPersonalizedAds?: number
+}
+
 declare global {
   interface Window {
-    adsbygoogle?: unknown[]
+    adsbygoogle?: AdsByGoogle
   }
+}
+
+/** A flag tem de existir antes do script executar. O `push` entra na fila depois. */
+function armAdsense(client: string) {
+  const ads: AdsByGoogle = (window.adsbygoogle = window.adsbygoogle || [])
+  ads.requestNonPersonalizedAds = 1
+
+  if (document.querySelector(`script[src^="${ADSENSE_SCRIPT}"]`)) return
+
+  const script = document.createElement('script')
+  script.async = true
+  script.src = `${ADSENSE_SCRIPT}?client=${client}`
+  script.crossOrigin = 'anonymous'
+  document.head.appendChild(script)
 }
 
 export function AdSlot() {
@@ -29,9 +50,11 @@ export function AdSlot() {
       attributeFilter: ['data-ad-status'],
     })
 
+    armAdsense(client)
+
     if (!ins.getAttribute('data-adsbygoogle-status')) {
       try {
-        ;(window.adsbygoogle = window.adsbygoogle || []).push({})
+        window.adsbygoogle?.push({})
       } catch {}
     }
 

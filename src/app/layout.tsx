@@ -5,8 +5,6 @@ import type { Metadata, Viewport } from 'next'
 // eslint-disable-next-line camelcase
 import { Bricolage_Grotesque, Inter } from 'next/font/google'
 
-import { getAdsenseClient } from '@/lib/adsense'
-
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const display = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -36,26 +34,8 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const adsenseClient = getAdsenseClient()
-
   return (
     <html lang="pt-BR" className="dark">
-      {adsenseClient ? (
-        <head>
-          <script
-            dangerouslySetInnerHTML={{
-              __html:
-                '(adsbygoogle=window.adsbygoogle||[]).requestNonPersonalizedAds=1',
-            }}
-          />
-          {/* defer: o React içaria um script async para antes desta flag. */}
-          <script
-            defer
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`}
-            crossOrigin="anonymous"
-          />
-        </head>
-      ) : null}
       <body
         className={`${inter.variable} ${display.variable} bg-neutral-950 font-sans text-white antialiased`}
       >
