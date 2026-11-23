@@ -36,4 +36,9 @@
       #0a0a0f;
     transition: background 0.6s ease;
   }
+
+  .editorial a:not([class]) {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
 }

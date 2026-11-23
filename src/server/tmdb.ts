@@ -18,6 +18,7 @@ export class TmdbError extends Error {}
 export async function tmdb<T>(
   path: string,
   params: Record<string, string | number | undefined> = {},
+  revalidate?: number,
 ): Promise<T> {
   const token = process.env.TMDB_TOKEN
   if (!token) throw new TmdbError('TMDB_TOKEN ausente')
@@ -33,6 +34,7 @@ export async function tmdb<T>(
       Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}`,
     },
     signal: AbortSignal.timeout(6000),
+    ...(revalidate ? { next: { revalidate } } : {}),
   })
   if (!res.ok) throw new TmdbError(`TMDB ${res.status} em ${path}`)
   return (await res.json()) as T
