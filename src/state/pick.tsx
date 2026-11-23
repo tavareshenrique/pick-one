@@ -100,8 +100,18 @@ const Ctx = createContext<{
   dispatch: (a: Action) => void
 } | null>(null)
 
-export function PickProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initial)
+export function PickProvider({
+  children,
+  initialMood = null,
+}: {
+  children: ReactNode
+  initialMood?: MoodId | null
+}) {
+  const [state, dispatch] = useReducer(
+    reducer,
+    initialMood,
+    (mood): PickState => ({ ...initial, mood }),
+  )
   const value = useMemo(() => ({ state, dispatch }), [state])
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

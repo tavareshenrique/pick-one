@@ -11,11 +11,25 @@ const display = Bricolage_Grotesque({
   variable: '--font-display',
 })
 
+const description =
+  'Me fala o que sente, me fala o que quer sentir, e eu te recomendo um filme baseado nisso.'
+
 export const metadata: Metadata = {
-  title: 'Pick One Movie',
-  description:
-    'Me fala o que sente, me fala o que quer sentir, e eu te recomendo um filme baseado nisso.',
+  metadataBase: new URL('https://pick-one.app'),
+  title: {
+    default: 'Pick One Movie',
+    template: '%s · Pick One',
+  },
+  description,
   applicationName: 'Pick One',
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    siteName: 'Pick One',
+    title: 'Pick One Movie',
+    description,
+    url: 'https://pick-one.app',
+  },
   appleWebApp: {
     capable: true,
     title: 'Pick One',
